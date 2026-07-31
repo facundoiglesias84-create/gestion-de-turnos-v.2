@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CheckCircle2, PlayCircle } from 'lucide-react';
+import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CheckCircle2, PlayCircle, CalendarClock } from 'lucide-react';
 
 const formatFechaCompleta = (fechaStr, horaStr) => {
   if (!fechaStr) return horaStr ? `${horaStr} hs` : '';
@@ -21,7 +21,8 @@ export const TurnosListView = ({
   onSelectTurno, 
   onDeleteTurno, 
   onOpenNewTurno,
-  onRequestStatusChange
+  onRequestStatusChange,
+  onOpenReschedule
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('proximos');
@@ -176,7 +177,7 @@ export const TurnosListView = ({
                   </div>
                 </div>
 
-                {/* Avanzar Estado con Doble Confirmación */}
+                {/* Avanzar Estado */}
                 <div style={{ marginBottom: '0.65rem' }}>
                   {t.estado === 'nuevo' || t.estado === 'pendiente' ? (
                     <button 
@@ -203,15 +204,25 @@ export const TurnosListView = ({
                   )}
                 </div>
 
-                {/* Acciones Secundarias */}
+                {/* Acciones Secundarias con Botón de Reagendar */}
                 <div style={{ display: 'flex', gap: '0.4rem', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid var(--border-color)' }}>
                   <button 
                     className="btn btn-secondary" 
+                    onClick={() => onOpenReschedule(t)}
+                    style={{ fontSize: '0.8rem', padding: '0.4rem 0.65rem', gap: '0.35rem' }}
+                    title="Cambiar fecha u hora del turno"
+                  >
+                    <CalendarClock size={15} style={{ color: 'var(--accent-cyan)' }} />
+                    <span>Reagendar</span>
+                  </button>
+
+                  <button 
+                    className="btn btn-secondary" 
                     onClick={() => onSelectTurno(t)}
-                    style={{ flex: 1, fontSize: '0.8rem', padding: '0.4rem' }}
+                    style={{ flex: 1, fontSize: '0.8rem', padding: '0.4rem', gap: '0.35rem' }}
                   >
                     <Edit3 size={14} />
-                    <span>Gestionar Tareas</span>
+                    <span>Tareas</span>
                   </button>
 
                   <button 

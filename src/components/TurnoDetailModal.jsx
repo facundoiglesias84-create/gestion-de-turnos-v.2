@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { X, CheckSquare, Plus, Trash2, Clock, Phone, FileText, DollarSign, BookOpen } from 'lucide-react';
+import { X, CheckSquare, Plus, Trash2, Clock, Phone, FileText, DollarSign, BookOpen, CalendarClock } from 'lucide-react';
 
-export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, tareasPredefinidas = [], onRequestStatusChange }) => {
+export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, tareasPredefinidas = [], onRequestStatusChange, onOpenReschedule }) => {
   const [newTaskText, setNewTaskText] = useState('');
   const [newTaskPrice, setNewTaskPrice] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
@@ -99,13 +99,27 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, tareas
             <strong>{turno.clienteTelefono || 'Sin registrar'}</strong>
           </div>
 
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', gridColumn: 'span 2' }}>
-            <div style={{ color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <DollarSign size={14} style={{ color: 'var(--accent-emerald)' }} /> Total del Turno
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', gridColumn: 'span 2', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <DollarSign size={14} style={{ color: 'var(--accent-emerald)' }} /> Total del Turno
+              </div>
+              <strong style={{ color: 'var(--accent-emerald)', fontSize: '1.1rem' }}>
+                ${totalPrecio.toLocaleString('es-AR')}
+              </strong>
             </div>
-            <strong style={{ color: 'var(--accent-emerald)', fontSize: '1.1rem' }}>
-              ${totalPrecio.toLocaleString('es-AR')}
-            </strong>
+
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => {
+                onClose();
+                if (onOpenReschedule) onOpenReschedule(turno);
+              }}
+              style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', gap: '0.35rem' }}
+            >
+              <CalendarClock size={15} style={{ color: 'var(--accent-cyan)' }} />
+              <span>Reagendar</span>
+            </button>
           </div>
         </div>
 

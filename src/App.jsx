@@ -10,6 +10,7 @@ import { TurnoDetailModal } from './components/TurnoDetailModal';
 import { XataConfigModal } from './components/XataConfigModal';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
 import { ConfirmStatusModal } from './components/ConfirmStatusModal';
+import { RescheduleModal } from './components/RescheduleModal';
 import { ReminderModal } from './components/ReminderModal';
 
 import { getStoredTurnos, saveTurnos, getStoredTareasPredefinidas, saveTareasPredefinidas } from './services/storageService';
@@ -35,6 +36,10 @@ export function App() {
   // Doble confirmación para cambio de estado
   const [pendingStatusData, setPendingStatusData] = useState(null);
   const [isConfirmStatusOpen, setIsConfirmStatusOpen] = useState(false);
+
+  // Modal de Reagendar turno
+  const [rescheduleTurno, setRescheduleTurno] = useState(null);
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
 
   const [reminderTurno, setReminderTurno] = useState(null);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
@@ -120,6 +125,15 @@ export function App() {
     handleUpdateTurno({ ...turno, estado: targetStatus });
     setIsConfirmStatusOpen(false);
     setPendingStatusData(null);
+  };
+
+  const handleOpenReschedule = (turno) => {
+    setRescheduleTurno(turno);
+    setIsRescheduleOpen(true);
+  };
+
+  const handleRescheduleTurno = (turnoReagendado) => {
+    handleUpdateTurno(turnoReagendado);
   };
 
   const handleRequestDelete = (id) => {
@@ -237,6 +251,7 @@ export function App() {
             onOpenNewTurno={handleOpenNewTurno}
             onOpenReminder={handleOpenReminder}
             onRequestStatusChange={handleRequestStatusChange}
+            onOpenReschedule={handleOpenReschedule}
           />
         )}
       </main>
@@ -264,6 +279,7 @@ export function App() {
         onOpenReminder={handleOpenReminder}
         tareasPredefinidas={tareasPredefinidas}
         onRequestStatusChange={handleRequestStatusChange}
+        onOpenReschedule={handleOpenReschedule}
       />
 
       <XataConfigModal 
@@ -284,6 +300,14 @@ export function App() {
         onClose={() => setIsConfirmStatusOpen(false)}
         onConfirm={handleConfirmStatusChange}
         pendingStatusData={pendingStatusData}
+      />
+
+      <RescheduleModal 
+        isOpen={isRescheduleOpen}
+        onClose={() => setIsRescheduleOpen(false)}
+        turno={rescheduleTurno}
+        turnosExistentes={turnos}
+        onReschedule={handleRescheduleTurno}
       />
 
       <ReminderModal 
