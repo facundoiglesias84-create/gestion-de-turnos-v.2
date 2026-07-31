@@ -59,7 +59,6 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-title);
   font-weight: 700;
@@ -107,7 +106,6 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -169,7 +167,6 @@ h1, h2, h3, h4, h5, h6 {
   flex-shrink: 0;
 }
 
-/* Inputs & Form Controls */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -207,7 +204,6 @@ h1, h2, h3, h4, h5, h6 {
   min-height: 75px;
 }
 
-/* Badges & Status Pills */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -245,7 +241,6 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid rgba(244, 63, 94, 0.3);
 }
 
-/* Header Navbar */
 .app-header {
   position: sticky;
   top: 0;
@@ -307,7 +302,6 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Navigation Tabs */
 .nav-tabs {
   display: flex;
   align-items: center;
@@ -342,9 +336,10 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
 }
 
-/* BARRA INFERIOR MÓVIL SÚPER SIMÉTRICA Y CENTRADA */
-.mobile-nav {
-  display: flex;
+/* BARRA MÓVIL 3 COLUMNAS: CALENDARIO - (+) TURNOS - SERVICIOS */
+.mobile-nav-three {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -356,33 +351,15 @@ h1, h2, h3, h4, h5, h6 {
   border-top: 1px solid var(--border-color);
   z-index: 50;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 0.5rem;
 }
 
 @media (min-width: 769px) {
-  .mobile-nav {
+  .mobile-nav-three {
     display: none;
   }
 }
 
-.mobile-nav-side {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.mobile-nav-side.left {
-  justify-content: space-around;
-  padding-right: 28px;
-}
-
-.mobile-nav-side.right {
-  justify-content: space-around;
-  padding-left: 28px;
-}
-
-.mobile-nav-item {
+.mobile-nav-col {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -391,42 +368,60 @@ h1, h2, h3, h4, h5, h6 {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 0.7rem;
+  font-size: 0.725rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 0.3rem 0.5rem;
+  height: 100%;
   transition: color 0.2s ease;
 }
 
-.mobile-nav-item.active {
+.mobile-nav-col.active, .mobile-nav-col-inner.active {
   color: var(--accent-cyan);
 }
 
-.mobile-add-btn {
+.mobile-nav-col.center-col {
+  position: relative;
+  justify-content: flex-end;
+  padding-bottom: 7px;
+}
+
+.mobile-nav-col-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.725rem;
+  font-weight: 600;
+  cursor: pointer;
+  gap: 0.15rem;
+}
+
+.mobile-floating-plus {
   position: absolute;
+  top: -20px;
   left: 50%;
-  top: -18px;
   transform: translateX(-50%);
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo));
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+  box-shadow: 0 6px 18px rgba(6, 182, 212, 0.5);
   border: 3px solid var(--bg-dark);
   cursor: pointer;
   z-index: 60;
   transition: transform 0.2s ease;
 }
 
-.mobile-add-btn:active {
+.mobile-floating-plus:active {
   transform: translateX(-50%) scale(0.92);
 }
 
-/* Stats Cards */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -472,7 +467,6 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
 }
 
-/* Calendar Component Adaptativo */
 .calendar-card {
   padding: 0.75rem;
   width: 100%;
@@ -623,7 +617,6 @@ h1, h2, h3, h4, h5, h6 {
 .mini-turno-chip.pendiente { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
 .mini-turno-chip.completado { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
 
-/* Modals & Drawers */
 .modal-overlay {
   position: fixed;
   inset: 0;
