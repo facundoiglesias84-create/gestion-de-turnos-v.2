@@ -3,7 +3,7 @@ import { Header } from './components/Header';
 import { MobileNav } from './components/MobileNav';
 import { CalendarView } from './components/CalendarView';
 import { TurnosListView } from './components/TurnosListView';
-import { ServiciosView } from './components/ServiciosView';
+import { TareasPredefinidasView } from './components/TareasPredefinidasView';
 import { StatsOverview } from './components/StatsOverview';
 import { TurnoModal } from './components/TurnoModal';
 import { TurnoDetailModal } from './components/TurnoDetailModal';
@@ -11,14 +11,14 @@ import { XataConfigModal } from './components/XataConfigModal';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
 import { ReminderModal } from './components/ReminderModal';
 
-import { getStoredTurnos, saveTurnos, getStoredServicios, saveServicios } from './services/storageService';
+import { getStoredTurnos, saveTurnos, getStoredTareasPredefinidas, saveTareasPredefinidas } from './services/storageService';
 import { fetchTurnosFromXata, syncTurnoToXata, deleteTurnoFromXata, checkXataStatus } from './services/xataService';
 
 export function App() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [turnos, setTurnos] = useState([]);
-  const [servicios, setServicios] = useState(() => getStoredServicios());
+  const [tareasPredefinidas, setTareasPredefinidas] = useState(() => getStoredTareasPredefinidas());
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [activeTab, setActiveTab] = useState('calendar');
 
@@ -31,7 +31,6 @@ export function App() {
   const [turnoToDelete, setTurnoToDelete] = useState(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
 
-  // Modal de Recordatorio personalizado
   const [reminderTurno, setReminderTurno] = useState(null);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
 
@@ -69,15 +68,15 @@ export function App() {
   }, [turnos, isLoading]);
 
   useEffect(() => {
-    saveServicios(servicios);
-  }, [servicios]);
+    saveTareasPredefinidas(tareasPredefinidas);
+  }, [tareasPredefinidas]);
 
-  const handleAddServicio = (nuevoServicio) => {
-    setServicios([...servicios, nuevoServicio]);
+  const handleAddTareaPreset = (nuevaTarea) => {
+    setTareasPredefinidas([...tareasPredefinidas, nuevaTarea]);
   };
 
-  const handleDeleteServicio = (id) => {
-    setServicios(servicios.filter(s => s.id !== id));
+  const handleDeleteTareaPreset = (id) => {
+    setTareasPredefinidas(tareasPredefinidas.filter(t => t.id !== id));
   };
 
   const handleCreateTurno = async (nuevoTurno) => {
@@ -180,10 +179,10 @@ export function App() {
             </button>
 
             <button 
-              className={`tab-btn ${activeTab === 'servicios' ? 'active' : ''}`}
-              onClick={() => setActiveTab('servicios')}
+              className={`tab-btn ${activeTab === 'tareas' ? 'active' : ''}`}
+              onClick={() => setActiveTab('tareas')}
             >
-              Servicios & Categorías ({servicios.length})
+              Catálogo de Tareas ({tareasPredefinidas.length})
             </button>
           </div>
         </div>
@@ -198,11 +197,11 @@ export function App() {
           />
         )}
 
-        {activeTab === 'servicios' && (
-          <ServiciosView 
-            servicios={servicios}
-            onAddServicio={handleAddServicio}
-            onDeleteServicio={handleDeleteServicio}
+        {activeTab === 'tareas' && (
+          <TareasPredefinidasView 
+            tareasPredefinidas={tareasPredefinidas}
+            onAddTareaPreset={handleAddTareaPreset}
+            onDeleteTareaPreset={handleDeleteTareaPreset}
           />
         )}
 
@@ -234,7 +233,7 @@ export function App() {
         onSave={handleCreateTurno}
         defaultDate={newTurnoDefaultDate}
         turnosExistentes={turnos}
-        servicios={servicios}
+        tareasPredefinidas={tareasPredefinidas}
       />
 
       <TurnoDetailModal 
@@ -243,6 +242,7 @@ export function App() {
         turno={selectedTurnoDetail}
         onUpdateTurno={handleUpdateTurno}
         onOpenReminder={handleOpenReminder}
+        tareasPredefinidas={tareasPredefinidas}
       />
 
       <XataConfigModal 

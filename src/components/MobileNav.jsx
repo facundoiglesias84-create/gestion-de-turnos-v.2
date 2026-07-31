@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, ListFilter, Plus, Tag } from 'lucide-react';
+import { Calendar, ListFilter, Plus, CheckSquare } from 'lucide-react';
 
 export const MobileNav = ({ activeTab, setActiveTab, onOpenNewTurno }) => {
   return (
@@ -33,13 +33,13 @@ export const MobileNav = ({ activeTab, setActiveTab, onOpenNewTurno }) => {
         </button>
       </div>
 
-      {/* 3. Servicios (Derecha) */}
+      {/* 3. Tareas Predefinidas (Derecha) */}
       <button 
-        className={`mobile-nav-col ${activeTab === 'servicios' ? 'active' : ''}`}
-        onClick={() => setActiveTab('servicios')}
+        className={`mobile-nav-col ${activeTab === 'tareas' ? 'active' : ''}`}
+        onClick={() => setActiveTab('tareas')}
       >
-        <Tag size={19} />
-        <span>Servicios</span>
+        <CheckSquare size={19} />
+        <span>Tareas</span>
       </button>
     </nav>
   );

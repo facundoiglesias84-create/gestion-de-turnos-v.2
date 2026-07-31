@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
-import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText, DollarSign } from 'lucide-react';
+import { X, CheckSquare, Plus, Trash2, Clock, Phone, FileText, DollarSign, BookOpen } from 'lucide-react';
 
-export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
+export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, tareasPredefinidas = [] }) => {
   const [newTaskText, setNewTaskText] = useState('');
   const [newTaskPrice, setNewTaskPrice] = useState('');
+  const [selectedPresetId, setSelectedPresetId] = useState('');
 
   if (!isOpen || !turno) return null;
+
+  const handleSelectPreset = (presetId) => {
+    setSelectedPresetId(presetId);
+    if (!presetId) return;
+    const preset = tareasPredefinidas.find(tp => tp.id === presetId);
+    if (preset) {
+      setNewTaskText(preset.descripcion);
+      setNewTaskPrice(preset.precio || '');
+    }
+  };
 
   const handleToggleTask = (taskId) => {
     const updatedTareas = turno.tareas.map((t) => 
@@ -27,6 +38,7 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
     onUpdateTurno({ ...turno, tareas: updatedTareas });
     setNewTaskText('');
     setNewTaskPrice('');
+    setSelectedPresetId('');
   };
 
   const handleDeleteTask = (taskId) => {
@@ -77,22 +89,17 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </div>
 
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-            <div style={{ color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Servicio Solicitado</div>
-            <strong>{turno.servicio}</strong>
-          </div>
-
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
             <div style={{ color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <Phone size={14} /> Teléfono
             </div>
             <strong>{turno.clienteTelefono || 'Sin registrar'}</strong>
           </div>
 
-          <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', gridColumn: 'span 2' }}>
             <div style={{ color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <DollarSign size={14} style={{ color: 'var(--accent-emerald)' }} /> Total del Turno
             </div>
-            <strong style={{ color: 'var(--accent-emerald)', fontSize: '1rem' }}>
+            <strong style={{ color: 'var(--accent-emerald)', fontSize: '1.1rem' }}>
               ${totalPrecio.toLocaleString('es-AR')}
             </strong>
           </div>
@@ -140,6 +147,25 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           <div className="progress-container" style={{ marginBottom: '0.85rem' }}>
             <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
           </div>
+
+          {/* Selector de Catálogo Predefinido */}
+          {tareasPredefinidas.length > 0 && (
+            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+              <select 
+                className="select-field"
+                value={selectedPresetId}
+                onChange={(e) => handleSelectPreset(e.target.value)}
+                style={{ fontSize: '0.825rem' }}
+              >
+                <option value="">-- Cargar tarea del catálogo predefinido --</option>
+                {tareasPredefinidas.map((tp) => (
+                  <option key={tp.id} value={tp.id}>
+                    {tp.descripcion} (${tp.precio ? tp.precio.toLocaleString('es-AR') : 0})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <form onSubmit={handleAddTask} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '0.35rem', marginBottom: '0.6rem' }}>
             <input 
