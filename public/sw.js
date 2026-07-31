@@ -1,9 +1,8 @@
-const CACHE_NAME = 'turnoflow-v1';
+const CACHE_NAME = 'turnos-v3';
 const urlsToCache = [
-  '/',
-  '/index.html',
   '/manifest.json',
-  '/icon.svg'
+  '/icon.svg',
+  '/logo.jpg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -20,9 +19,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
+          return caches.delete(cacheName);
         })
       );
     })
@@ -32,13 +29,15 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  
-  // Ignorar peticiones internas de Vite y endpoints de API
+
+  // NUNCA cachear index.html ni peticiones API ni assets hashed para evitar 404 de bundles viejos
   if (
+    url.pathname === '/' ||
+    url.pathname.endsWith('.html') ||
     url.pathname.startsWith('/@') || 
     url.pathname.startsWith('/src/') || 
     url.pathname.startsWith('/api/') || 
-    url.pathname.includes('node_modules') ||
+    url.pathname.startsWith('/assets/') ||
     event.request.method !== 'GET'
   ) {
     return;
