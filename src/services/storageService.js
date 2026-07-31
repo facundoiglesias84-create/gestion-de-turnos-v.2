@@ -1,5 +1,3 @@
-// Servicio de almacenamiento local con estado inicial de ejemplo
-
 const STORAGE_KEY = 'turnoflow_turnos_v1';
 const SERVICES_KEY = 'turnoflow_servicios_v1';
 const CONFIG_KEY = 'turnoflow_xata_config';
@@ -31,7 +29,7 @@ const INITIAL_TURNOS = [
     horaInicio: '09:00',
     horaFin: '09:00',
     servicio: 'Mantenimiento Preventivo',
-    estado: 'confirmado',
+    estado: 'nuevo', // 'nuevo' | 'confirmado' | 'finalizado'
     notas: 'Cliente solicita revisión de presión y escaneo computarizado.',
     tareas: [
       { id: 'tk-1', descripcion: 'Diagnóstico por computadora (ODB2)', precio: 5000, completada: true },
@@ -66,7 +64,13 @@ export const getStoredTurnos = () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_TURNOS));
       return INITIAL_TURNOS;
     }
-    return JSON.parse(data);
+    // Mapear estados viejos si existen
+    const parsed = JSON.parse(data);
+    return parsed.map(t => {
+      if (t.estado === 'pendiente') return { ...t, estado: 'nuevo' };
+      if (t.estado === 'completado') return { ...t, estado: 'finalizado' };
+      return t;
+    });
   } catch (err) {
     return INITIAL_TURNOS;
   }
@@ -98,22 +102,5 @@ export const saveServicios = (servicios) => {
     localStorage.setItem(SERVICES_KEY, JSON.stringify(servicios));
   } catch (err) {
     console.error('Error guardando servicios:', err);
-  }
-};
-
-export const getXataConfig = () => {
-  try {
-    const data = localStorage.getItem(CONFIG_KEY);
-    return data ? JSON.parse(data) : { apiKey: '', dbUrl: '', branch: 'main', enabled: true };
-  } catch (err) {
-    return { apiKey: '', dbUrl: '', branch: 'main', enabled: true };
-  }
-};
-
-export const saveXataConfig = (config) => {
-  try {
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-  } catch (err) {
-    console.error('Error guardando configuración Xata:', err);
   }
 };

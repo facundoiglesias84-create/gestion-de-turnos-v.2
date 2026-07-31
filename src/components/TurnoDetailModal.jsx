@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText, CalendarPlus, DollarSign, Bell } from 'lucide-react';
-import { openCalendarEvent, requestNotificationPermission, sendTurnoReminderNotification } from '../utils/calendarHelper';
+import { openCalendarEvent, scheduleTurnoReminder } from '../utils/calendarHelper';
 
 export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
   const [newTaskText, setNewTaskText] = useState('');
@@ -39,14 +39,9 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
     onUpdateTurno({ ...turno, estado: newStatus });
   };
 
-  const handlePushReminder = async () => {
-    const granted = await requestNotificationPermission();
-    if (granted) {
-      sendTurnoReminderNotification(turno);
-      alert(`🔔 Recordatorio activado para ${turno.clienteNombre}`);
-    } else {
-      alert('Por favor habilita las notificaciones en tu navegador.');
-    }
+  const handlePushReminder = () => {
+    scheduleTurnoReminder(turno, 15);
+    alert(`🔔 Recordatorio activado para ${turno.clienteNombre}`);
   };
 
   const totalTasks = turno.tareas ? turno.tareas.length : 0;
@@ -55,15 +50,20 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
   
   const totalPrecio = turno.tareas ? turno.tareas.reduce((acc, t) => acc + (t.precio || 0), 0) : 0;
 
+  const badgeClass = turno.estado === 'nuevo' || turno.estado === 'pendiente'
+    ? 'badge-pendiente'
+    : turno.estado === 'confirmado'
+    ? 'badge-confirmado'
+    : 'badge-completado';
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         
-        {/* Cabecera */}
         <div className="modal-header">
           <div>
-            <span className={`badge badge-${turno.estado}`} style={{ marginBottom: '0.4rem' }}>
-              {turno.estado}
+            <span className={`badge ${badgeClass}`} style={{ marginBottom: '0.4rem' }}>
+              {turno.estado === 'nuevo' ? 'NUEVO' : turno.estado.toUpperCase()}
             </span>
             <h2 className="modal-title" style={{ fontSize: '1.25rem' }}>
               {turno.clienteNombre}
@@ -74,7 +74,6 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </button>
         </div>
 
-        {/* Info general */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
             <div style={{ color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -105,7 +104,6 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </div>
         </div>
 
-        {/* Acciones: 📅 Calendario & 🔔 Recordatorio */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
           <button 
             className="btn btn-secondary" 
@@ -126,32 +124,36 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </button>
         </div>
 
-        {/* Cambiar Estado */}
+        {/* Paso a paso de Estados sencillos */}
         <div className="form-group" style={{ marginBottom: '1rem' }}>
-          <label>Estado del Turno</label>
+          <label>Cambiar Estado del Turno</label>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-            {['confirmado', 'pendiente', 'completado', 'cancelado'].map((st) => (
+            {[
+              { id: 'nuevo', label: 'Nuevo' },
+              { id: 'confirmado', label: 'Confirmado' },
+              { id: 'finalizado', label: 'Finalizado' }
+            ].map((st) => (
               <button
-                key={st}
+                key={st.id}
                 type="button"
-                className={`badge badge-${st}`}
-                onClick={() => handleStatusChange(st)}
+                className={`badge badge-${st.id === 'nuevo' ? 'pendiente' : st.id === 'confirmado' ? 'confirmado' : 'completado'}`}
+                onClick={() => handleStatusChange(st.id)}
                 style={{ 
                   cursor: 'pointer', 
                   padding: '0.45rem 0.75rem', 
                   fontSize: '0.75rem',
-                  opacity: turno.estado === st ? 1 : 0.4,
-                  transform: turno.estado === st ? 'scale(1.05)' : 'none',
+                  opacity: turno.estado === st.id ? 1 : 0.4,
+                  transform: turno.estado === st.id ? 'scale(1.05)' : 'none',
                   transition: 'all 0.2s ease'
                 }}
               >
-                {st}
+                {st.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* TAREAS Y PRECIOS */}
+        {/* TAREAS */}
         <div className="tasks-section" style={{ margin: 0 }}>
           <div className="tasks-header">
             <div className="tasks-title">

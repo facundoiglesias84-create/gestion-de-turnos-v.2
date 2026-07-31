@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, Phone, Mail, Plus, Trash2, CheckSquare, Sparkles, AlertTriangle, DollarSign } from 'lucide-react';
+import { X, Calendar, Clock, User, Phone, Mail, Plus, Trash2, CheckSquare, Sparkles, AlertTriangle } from 'lucide-react';
 
 export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExistentes = [], servicios = [] }) => {
   const [clienteNombre, setClienteNombre] = useState('');
@@ -8,7 +8,7 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
   const [fecha, setFecha] = useState(defaultDate || new Date().toISOString().split('T')[0]);
   const [horaInicio, setHoraInicio] = useState('10:00');
   const [servicio, setServicio] = useState(servicios[0]?.nombre || 'Mantenimiento Preventivo');
-  const [estado, setEstado] = useState('confirmado');
+  const [estado, setEstado] = useState('nuevo');
   const [notas, setNotas] = useState('');
   
   const [conflictError, setConflictError] = useState('');
@@ -35,7 +35,7 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
       const existeConflicto = turnosExistentes.some((t) => 
         t.fecha === fecha && 
         t.horaInicio === horaInicio && 
-        t.estado !== 'cancelado'
+        t.estado !== 'finalizado' && t.estado !== 'cancelado'
       );
 
       if (existeConflicto) {
@@ -192,7 +192,6 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
             </div>
           </div>
 
-          {/* Servicio cargado dinámicamente desde la vista de Servicios */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div className="form-group">
               <label>Servicio / Categoría</label>
@@ -206,15 +205,14 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
             <div className="form-group">
               <label>Estado del Turno</label>
               <select className="select-field" value={estado} onChange={(e) => setEstado(e.target.value)}>
+                <option value="nuevo">Nuevo</option>
                 <option value="confirmado">Confirmado</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="completado">Completado</option>
-                <option value="cancelado">Cancelado</option>
+                <option value="finalizado">Finalizado</option>
               </select>
             </div>
           </div>
 
-          {/* TAREAS Y PRECIOS POR TAREA */}
+          {/* TAREAS */}
           <div className="tasks-section">
             <div className="tasks-header">
               <div className="tasks-title">
@@ -226,7 +224,6 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
               </div>
             </div>
 
-            {/* Input para agregar tarea con PRECIO */}
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '0.35rem', marginBottom: '0.6rem' }}>
               <input 
                 type="text" 

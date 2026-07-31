@@ -1,9 +1,5 @@
-// Helper para integración con Calendario y Notificaciones
+// Helper para Integración con Calendarios y Recordatorios Programados
 
-/**
- * Abre la pantalla de creación de evento en el Calendario del dispositivo / navegador sin descargar archivos.
- * En smartphones y computadoras abre directamente el formulario de agendamiento en el calendario.
- */
 export const openCalendarEvent = (turno) => {
   const [year, month, day] = turno.fecha.split('-');
   const [hours, minutes] = (turno.horaInicio || '10:00').split(':');
@@ -20,52 +16,6 @@ export const openCalendarEvent = (turno) => {
   window.open(googleCalUrl, '_blank');
 };
 
-/**
- * Descarga de archivo .ics para iCal (iOS / Apple Calendar)
- */
-export const downloadIcsFile = (turno) => {
-  const [year, month, day] = turno.fecha.split('-');
-  const [hours, minutes] = (turno.horaInicio || '10:00').split(':');
-
-  const startDateStr = `${year}${month}${day}T${hours}${minutes}00`;
-  const endHours = String((parseInt(hours, 10) + 1) % 24).padStart(2, '0');
-  const endDateStr = `${year}${month}${day}T${endHours}${minutes}00`;
-
-  const icsContent = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//TurnoFlow//Gestion de Turnos//ES',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    'BEGIN:VEVENT',
-    `SUMMARY:Turno: ${turno.servicio} - ${turno.clienteNombre}`,
-    `DESCRIPTION:Cliente: ${turno.clienteNombre}\\nTel: ${turno.clienteTelefono || 'Sin registrar'}\\nNotas: ${turno.notas || ''}`,
-    `DTSTART:${startDateStr}`,
-    `DTEND:${endDateStr}`,
-    `STATUS:${turno.estado.toUpperCase()}`,
-    'BEGIN:VALARM',
-    'TRIGGER:-PT30M',
-    'ACTION:DISPLAY',
-    'DESCRIPTION:Recordatorio de Turno',
-    'END:VALARM',
-    'END:VEVENT',
-    'END:VCALENDAR'
-  ].join('\r\n');
-
-  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', `turno-${turno.clienteNombre.replace(/\s+/g, '_')}-${turno.fecha}.ics`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-};
-
-/**
- * Solicitar permiso de notificaciones Push
- */
 export const requestNotificationPermission = async () => {
   if ('Notification' in window) {
     const permission = await Notification.requestPermission();
@@ -74,14 +24,37 @@ export const requestNotificationPermission = async () => {
   return false;
 };
 
-/**
- * Disparar notificación de recordatorio en el navegador
- */
-export const sendTurnoReminderNotification = (turno) => {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(`🔔 Recordatorio de Turno: ${turno.clienteNombre}`, {
-      body: `Servicio: ${turno.servicio}\nHora: ${turno.horaInicio} hs (${turno.fecha})`,
-      icon: '/icon.svg'
-    });
+export const scheduleTurnoReminder = (turno, minutosAntes = 15) => {
+  if (!('Notification' in window)) {
+    alert('Tu navegador no soporta notificaciones push.');
+    return;
   }
+
+  Notification.requestPermission().then((permission) => {
+    if (permission === 'granted') {
+      new Notification(`🔔 Recordatorio Programado: Turno de ${turno.clienteNombre}`, {
+        body: `Recibirás una alerta ${minutosAntes} minutos antes de las ${turno.horaInicio} hs (${turno.servicio}).`,
+        icon: '/logo.jpg'
+      });
+
+      // Calcular tiempo restante para el turno en milisegundos
+      const [year, month, day] = turno.fecha.split('-').map(Number);
+      const [hours, minutes] = turno.horaInicio.split(':').map(Number);
+      
+      const turnoDate = new Date(year, month - 1, day, hours, minutes);
+      const reminderTime = new Date(turnoDate.getTime() - minutosAntes * 60 * 1000);
+      const delay = reminderTime.getTime() - Date.now();
+
+      if (delay > 0) {
+        setTimeout(() => {
+          new Notification(`⚠️ ¡EN 15 MINUTOS! Turno de ${turno.clienteNombre}`, {
+            body: `Servicio: ${turno.servicio} a las ${turno.horaInicio} hs. Tel: ${turno.clienteTelefono || 'Sin teléfono'}`,
+            icon: '/logo.jpg'
+          });
+        }, delay);
+      }
+    } else {
+      alert('Debes permitir las notificaciones en la barra del navegador para recibir recordatorios.');
+    }
+  });
 };
