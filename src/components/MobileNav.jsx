@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, ListFilter, Plus, BarChart3, Tag } from 'lucide-react';
+import { Calendar, ListFilter, Plus, Tag } from 'lucide-react';
 
 export const MobileNav = ({ activeTab, setActiveTab, onOpenNewTurno }) => {
   return (
@@ -7,16 +7,18 @@ export const MobileNav = ({ activeTab, setActiveTab, onOpenNewTurno }) => {
       <button 
         className={`mobile-nav-item ${activeTab === 'calendar' ? 'active' : ''}`}
         onClick={() => setActiveTab('calendar')}
+        style={{ width: '25%' }}
       >
-        <Calendar size={19} />
+        <Calendar size={20} />
         <span>Calendario</span>
       </button>
 
       <button 
         className={`mobile-nav-item ${activeTab === 'turnos' ? 'active' : ''}`}
         onClick={() => setActiveTab('turnos')}
+        style={{ width: '25%' }}
       >
-        <ListFilter size={19} />
+        <ListFilter size={20} />
         <span>Turnos</span>
       </button>
 
@@ -31,17 +33,10 @@ export const MobileNav = ({ activeTab, setActiveTab, onOpenNewTurno }) => {
       <button 
         className={`mobile-nav-item ${activeTab === 'servicios' ? 'active' : ''}`}
         onClick={() => setActiveTab('servicios')}
+        style={{ width: '25%' }}
       >
-        <Tag size={19} />
+        <Tag size={20} />
         <span>Servicios</span>
-      </button>
-
-      <button 
-        className={`mobile-nav-item ${activeTab === 'stats' ? 'active' : ''}`}
-        onClick={() => setActiveTab('stats')}
-      >
-        <BarChart3 size={19} />
-        <span>Métricas</span>
       </button>
     </nav>
   );

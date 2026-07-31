@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CalendarPlus, Bell, CheckCircle2, PlayCircle, Sparkles } from 'lucide-react';
+import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CalendarPlus, Bell, CheckCircle2, PlayCircle } from 'lucide-react';
 import { openCalendarEvent, scheduleTurnoReminder } from '../utils/calendarHelper';
 
 export const TurnosListView = ({ 
@@ -11,7 +11,7 @@ export const TurnosListView = ({
   onUpdateStatus
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('proximos'); // 'proximos' | 'nuevo' | 'confirmado' | 'finalizado' | 'todos'
+  const [statusFilter, setStatusFilter] = useState('proximos');
   const [onlySelectedDate, setOnlySelectedDate] = useState(true);
 
   const filteredTurnos = turnos.filter((t) => {
@@ -34,7 +34,6 @@ export const TurnosListView = ({
     return true;
   });
 
-  // Avanzar estado sencillo (Nuevo ➔ Confirmado ➔ Finalizado)
   const handleAdvanceStatus = (t) => {
     if (t.estado === 'nuevo' || t.estado === 'pendiente') {
       onUpdateStatus(t.id, 'confirmado');
@@ -45,7 +44,7 @@ export const TurnosListView = ({
 
   const handlePushReminder = (t) => {
     scheduleTurnoReminder(t, 15);
-    alert(`🔔 Recordatorio programado para el turno de ${t.clienteNombre} a las ${t.horaInicio} hs. ¡Recibirás una alerta en tu dispositivo!`);
+    alert(`Recordatorio programado para el turno de ${t.clienteNombre} a las ${t.horaInicio} hs.`);
   };
 
   return (
@@ -75,19 +74,20 @@ export const TurnosListView = ({
           </button>
         </div>
 
-        {/* Filtros de Estado Prioritarios */}
+        {/* Filtros de Estado Profesionales SIN EMOJIS */}
         <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.85rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
           {[
-            { id: 'proximos', label: '⚡ Próximos' },
-            { id: 'nuevo', label: '🆕 Nuevos' },
-            { id: 'confirmado', label: '✅ Confirmados' },
-            { id: 'finalizado', label: '🏁 Finalizados' },
-            { id: 'todos', label: '📋 Todos' }
+            { id: 'proximos', label: 'Próximos' },
+            { id: 'nuevo', label: 'Nuevos' },
+            { id: 'confirmado', label: 'Confirmados' },
+            { id: 'finalizado', label: 'Finalizados' },
+            { id: 'todos', label: 'Todos' }
           ].map((st) => (
             <button
               key={st.id}
               className={`tab-btn ${statusFilter === st.id ? 'active' : ''}`}
               onClick={() => setStatusFilter(st.id)}
+              style={{ fontSize: '0.825rem', padding: '0.45rem 0.85rem' }}
             >
               {st.label}
             </button>
@@ -168,7 +168,7 @@ export const TurnosListView = ({
                   </div>
                 </div>
 
-                {/* PASO A PASO SENCILLO DE ESTADO */}
+                {/* PASO A PASO PROFESIONAL DE ESTADO (SIN EMOJIS) */}
                 <div style={{ marginBottom: '0.65rem' }}>
                   {t.estado === 'nuevo' || t.estado === 'pendiente' ? (
                     <button 
@@ -177,7 +177,7 @@ export const TurnosListView = ({
                       style={{ width: '100%', fontSize: '0.8rem', padding: '0.45rem', gap: '0.4rem' }}
                     >
                       <PlayCircle size={15} />
-                      <span>▶️ Confirmar Turno</span>
+                      <span>Confirmar Turno</span>
                     </button>
                   ) : t.estado === 'confirmado' ? (
                     <button 
@@ -186,25 +186,25 @@ export const TurnosListView = ({
                       style={{ width: '100%', fontSize: '0.8rem', padding: '0.45rem', gap: '0.4rem', border: '1px solid var(--accent-emerald)', color: '#34d399' }}
                     >
                       <CheckCircle2 size={15} />
-                      <span>✅ Finalizar Turno</span>
+                      <span>Finalizar Turno</span>
                     </button>
                   ) : (
                     <div style={{ fontSize: '0.8rem', textAlign: 'center', color: 'var(--text-muted)', padding: '0.25rem', fontWeight: 600 }}>
-                      🏁 Turno Finalizado
+                      Turno Finalizado
                     </div>
                   )}
                 </div>
 
-                {/* Acciones: 📅 Calendario & 🔔 Recordatorio */}
+                {/* Acciones */}
                 <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.65rem' }}>
                   <button 
                     className="btn btn-secondary"
                     onClick={() => openCalendarEvent(t)}
                     style={{ flex: 1, fontSize: '0.775rem', padding: '0.4rem 0.5rem', minHeight: '34px', gap: '0.35rem' }}
-                    title="Agendar en el Calendario de Celular / Google"
+                    title="Agendar en el Calendario de Celular"
                   >
                     <CalendarPlus size={14} style={{ color: 'var(--accent-cyan)' }} />
-                    <span>📅 Calendario</span>
+                    <span>Calendario</span>
                   </button>
 
                   <button 
@@ -214,7 +214,7 @@ export const TurnosListView = ({
                     title="Activar Recordatorio Notificación Push"
                   >
                     <Bell size={14} style={{ color: 'var(--accent-amber)' }} />
-                    <span>🔔 Recordatorio</span>
+                    <span>Recordatorio</span>
                   </button>
                 </div>
 
