@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { Bell, X, Clock, Calendar, Volume2, Check, Music } from 'lucide-react';
-import { requestNotificationPermission } from '../utils/calendarHelper';
+import { showSystemNotification } from '../utils/calendarHelper';
 
 export const ReminderModal = ({ isOpen, onClose, turno }) => {
   if (!isOpen || !turno) return null;
 
   const defaultDate = turno.fecha;
-  const [optionType, setOptionType] = useState('15min'); // '15min' | '30min' | '1hour' | '1day' | 'custom'
+  const [optionType, setOptionType] = useState('15min');
   const [customTime, setCustomTime] = useState(turno.horaInicio || '09:00');
   const [customDate, setCustomDate] = useState(defaultDate);
-  const [ringtone, setRingtone] = useState('system'); // 'system' | 'chime' | 'alarm' | 'soft'
+  const [ringtone, setRingtone] = useState('system');
   const [isSaved, setIsSaved] = useState(false);
 
-  // Reproducir vista previa de sonido usando Web Audio API
   const playSoundPreview = (type) => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -22,8 +21,8 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
       gain.connect(ctx.destination);
 
       if (type === 'chime' || type === 'system') {
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.3, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
         osc.start(ctx.currentTime);
@@ -36,10 +35,10 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.5);
-      } else { // soft
+      } else {
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2); // E5
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2);
         gain.gain.setValueAtTime(0.2, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
         osc.start(ctx.currentTime);
@@ -51,60 +50,58 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
   };
 
   const handleSaveReminder = async () => {
-    const granted = await requestNotificationPermission();
-    if (!granted) {
-      alert('Por favor autoriza los permisos de notificación en tu navegador/celular.');
-      return;
-    }
+    try {
+      let notifyDateObj;
+      let labelText = '';
 
-    let notifyDateObj;
-    let labelText = '';
+      if (optionType === 'custom') {
+        const [y, m, d] = customDate.split('-').map(Number);
+        const [h, min] = customTime.split(':').map(Number);
+        notifyDateObj = new Date(y, m - 1, d, h, min);
+        labelText = `para el ${customDate} a las ${customTime} hs`;
+      } else {
+        const [y, m, d] = turno.fecha.split('-').map(Number);
+        const [h, min] = turno.horaInicio.split(':').map(Number);
+        const turnoDate = new Date(y, m - 1, d, h, min);
 
-    if (optionType === 'custom') {
-      const [y, m, d] = customDate.split('-').map(Number);
-      const [h, min] = customTime.split(':').map(Number);
-      notifyDateObj = new Date(y, m - 1, d, h, min);
-      labelText = `para el ${customDate} a las ${customTime} hs`;
-    } else {
-      const [y, m, d] = turno.fecha.split('-').map(Number);
-      const [h, min] = turno.horaInicio.split(':').map(Number);
-      const turnoDate = new Date(y, m - 1, d, h, min);
+        let offsetMs = 15 * 60 * 1000;
+        if (optionType === '30min') offsetMs = 30 * 60 * 1000;
+        if (optionType === '1hour') offsetMs = 60 * 60 * 1000;
+        if (optionType === '1day') offsetMs = 24 * 60 * 60 * 1000;
 
-      let offsetMs = 15 * 60 * 1000;
-      if (optionType === '30min') offsetMs = 30 * 60 * 1000;
-      if (optionType === '1hour') offsetMs = 60 * 60 * 1000;
-      if (optionType === '1day') offsetMs = 24 * 60 * 60 * 1000;
+        notifyDateObj = new Date(turnoDate.getTime() - offsetMs);
+        labelText = `${optionType === '15min' ? '15 min' : optionType === '30min' ? '30 min' : optionType === '1hour' ? '1 hora' : '1 día'} antes del turno`;
+      }
 
-      notifyDateObj = new Date(turnoDate.getTime() - offsetMs);
-      labelText = `${optionType === '15min' ? '15 min' : optionType === '30min' ? '30 min' : optionType === '1hour' ? '1 hora' : '1 día'} antes del turno`;
-    }
+      const delay = notifyDateObj.getTime() - Date.now();
 
-    const delay = notifyDateObj.getTime() - Date.now();
+      // Disparar Notificación de Confirmación Inmediata en la barra de estado del sistema (estilo WhatsApp)
+      await showSystemNotification(
+        `🔔 Recordatorio Activado: ${turno.clienteNombre}`,
+        `Notificación programada ${labelText} (${turno.servicio}). Tono: ${ringtone === 'system' ? 'Celular' : ringtone}`
+      );
 
-    // Confirmación en notificación de sistema inmediata
-    new Notification(`🔔 Recordatorio Programado: ${turno.clienteNombre}`, {
-      body: `Te avisaremos ${labelText} (${turno.servicio}). Tono: ${ringtone === 'system' ? 'Tono Nativo del Celular' : ringtone}`,
-      icon: '/logo.jpg',
-      vibrate: [200, 100, 200, 100, 400]
-    });
+      // Si el tiempo del aviso es futuro, programar el temporizador
+      if (delay > 0) {
+        setTimeout(async () => {
+          playSoundPreview(ringtone);
+          await showSystemNotification(
+            `⏰ ¡RECORDATORIO DE TURNO! ${turno.clienteNombre}`,
+            `Servicio: ${turno.servicio} a las ${turno.horaInicio} hs. Tel: ${turno.clienteTelefono || 'Sin registrar'}`
+          );
+        }, delay);
+      }
 
-    // Programar la alerta si está dentro de la sesión activa
-    if (delay > 0) {
+      setIsSaved(true);
       setTimeout(() => {
-        playSoundPreview(ringtone);
-        new Notification(`⏰ ¡RECORDATORIO DE TURNO! ${turno.clienteNombre}`, {
-          body: `Servicio: ${turno.servicio} a las ${turno.horaInicio} hs. Tel: ${turno.clienteTelefono || 'Sin registrar'}`,
-          icon: '/logo.jpg',
-          vibrate: [300, 100, 300, 100, 500]
-        });
-      }, delay);
-    }
+        setIsSaved(false);
+        onClose();
+      }, 600);
 
-    setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
+    } catch (err) {
+      console.error('Error al guardar recordatorio:', err);
       onClose();
-    }, 1200);
+    }
   };
 
   return (
@@ -125,7 +122,7 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
           Configura la hora exacta y el tono de notificación para el turno de <strong style={{ color: 'var(--text-primary)' }}>{turno.clienteNombre}</strong> ({turno.servicio} - {turno.horaInicio} hs).
         </div>
 
-        {/* 1. SELECCIÓN DE HORA DE RECORDATORIO */}
+        {/* 1. HORA DE RECORDATORIO */}
         <div className="form-group" style={{ marginBottom: '1.25rem' }}>
           <label><Clock size={14} style={{ display: 'inline', marginRight: '4px' }} /> ¿Cuándo quieres recibir la alerta?</label>
           
@@ -158,7 +155,6 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
             <span>Definir Fecha y Hora Exacta</span>
           </button>
 
-          {/* Selector Fecha & Hora Personalizada */}
           {optionType === 'custom' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <div>
@@ -183,7 +179,7 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
           )}
         </div>
 
-        {/* 2. SELECCIÓN DE TONO / RING TONE */}
+        {/* 2. SELECCIÓN DE TONO */}
         <div className="form-group" style={{ marginBottom: '1.25rem' }}>
           <label><Music size={14} style={{ display: 'inline', marginRight: '4px' }} /> Tono de Alarma / Notificación</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.35rem' }}>
@@ -235,7 +231,7 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
           </div>
         </div>
 
-        {/* BOTÓN DE GUARDADO */}
+        {/* BOTONES */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.25rem' }}>
           <button className="btn btn-secondary" onClick={onClose}>
             Cancelar
