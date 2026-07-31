@@ -2,6 +2,20 @@ import React, { useState } from 'react';
 import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CalendarPlus, Bell, CheckCircle2, PlayCircle } from 'lucide-react';
 import { openCalendarEvent } from '../utils/calendarHelper';
 
+const formatFechaCompleta = (fechaStr, horaStr) => {
+  if (!fechaStr) return horaStr ? `${horaStr} hs` : '';
+  const [year, month, day] = fechaStr.split('-').map(Number);
+  const dateObj = new Date(year, month - 1, day);
+  
+  const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const nombreDia = dias[dateObj.getDay()];
+  const nombreMes = meses[dateObj.getMonth()];
+
+  return `${nombreDia} ${day} de ${nombreMes} - ${horaStr} hs`;
+};
+
 export const TurnosListView = ({ 
   turnos, 
   selectedDate, 
@@ -70,6 +84,7 @@ export const TurnosListView = ({
           </button>
         </div>
 
+        {/* Filtros de Estado */}
         <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.85rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
           {[
             { id: 'proximos', label: 'Próximos' },
@@ -122,14 +137,15 @@ export const TurnosListView = ({
             return (
               <div key={t.id} className="glass-panel" style={{ padding: '1.1rem', display: 'flex', flexDirection: 'column' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <span className={`badge ${badgeClass}`}>
                       {t.estado === 'nuevo' ? 'NUEVO' : t.estado.toUpperCase()}
                     </span>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>
-                      <Clock size={14} />
-                      <span>{t.horaInicio} hs</span>
+                    {/* Nombre del día, número de día y hora: ej: "Lunes 7 de Junio - 09:00 hs" */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>
+                      <Clock size={13} />
+                      <span>{formatFechaCompleta(t.fecha, t.horaInicio)}</span>
                     </div>
                   </div>
 
@@ -163,7 +179,7 @@ export const TurnosListView = ({
                   </div>
                 </div>
 
-                {/* PASO A PASO PROFESIONAL DE ESTADO */}
+                {/* Avanzar Estado */}
                 <div style={{ marginBottom: '0.65rem' }}>
                   {t.estado === 'nuevo' || t.estado === 'pendiente' ? (
                     <button 

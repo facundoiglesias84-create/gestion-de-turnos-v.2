@@ -7,7 +7,7 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
-export const CalendarView = ({ turnos, selectedDate, setSelectedDate, onOpenNewTurno, onSelectTurno }) => {
+export const CalendarView = ({ turnos, selectedDate, setSelectedDate, onOpenNewTurno }) => {
   const initialDateObj = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
   
   const [currentYear, setCurrentYear] = useState(initialDateObj.getFullYear());
@@ -148,9 +148,10 @@ export const CalendarView = ({ turnos, selectedDate, setSelectedDate, onOpenNewT
                       className={`mini-turno-chip ${t.estado}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onSelectTurno(t);
+                        // Al tocar la celda o el chip SOLO filtra la fecha en lugar de abrir el modal de edicion
+                        setSelectedDate(dateStr);
                       }}
-                      title={`${t.horaInicio} - ${t.clienteNombre} (${t.servicio})`}
+                      title={`Turno de ${t.clienteNombre} (${t.horaInicio} hs)`}
                     >
                       <strong>{t.horaInicio}</strong> {t.clienteNombre.split(' ')[0]}
                       {totalTasks > 0 && (
