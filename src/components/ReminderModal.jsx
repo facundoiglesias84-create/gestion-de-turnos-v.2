@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Bell, X, Clock, Calendar, Volume2, Check, Music } from 'lucide-react';
-import { showSystemNotification } from '../utils/calendarHelper';
+import { showSystemNotification, scheduleBackgroundNotification } from '../utils/calendarHelper';
 
 export const ReminderModal = ({ isOpen, onClose, turno }) => {
   if (!isOpen || !turno) return null;
@@ -75,20 +75,23 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
 
       const delay = notifyDateObj.getTime() - Date.now();
 
-      // Disparar Notificación de Confirmación Inmediata en la barra de estado del sistema (estilo WhatsApp)
+      // Notificación de Confirmación Inmediata en la barra de estado con ícono del reloj en Android (badge.svg)
       await showSystemNotification(
         `🔔 Recordatorio Activado: ${turno.clienteNombre}`,
         `Notificación programada ${labelText} (${turno.servicio}). Tono: ${ringtone === 'system' ? 'Celular' : ringtone}`
       );
 
-      // Si el tiempo del aviso es futuro, programar el temporizador
+      // Programar la alerta en el Service Worker para que se ejecute en segundo plano incluso con la app/pantalla cerrada
+      const alertTitle = `⏰ ¡RECORDATORIO DE TURNO! ${turno.clienteNombre}`;
+      const alertBody = `Servicio: ${turno.servicio} a las ${turno.horaInicio} hs. Tel: ${turno.clienteTelefono || 'Sin registrar'}`;
+
       if (delay > 0) {
+        scheduleBackgroundNotification(alertTitle, alertBody, delay);
+
+        // Timer de respaldo local
         setTimeout(async () => {
           playSoundPreview(ringtone);
-          await showSystemNotification(
-            `⏰ ¡RECORDATORIO DE TURNO! ${turno.clienteNombre}`,
-            `Servicio: ${turno.servicio} a las ${turno.horaInicio} hs. Tel: ${turno.clienteTelefono || 'Sin registrar'}`
-          );
+          await showSystemNotification(alertTitle, alertBody);
         }, delay);
       }
 
@@ -122,7 +125,6 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
           Configura la hora exacta y el tono de notificación para el turno de <strong style={{ color: 'var(--text-primary)' }}>{turno.clienteNombre}</strong> ({turno.servicio} - {turno.horaInicio} hs).
         </div>
 
-        {/* 1. HORA DE RECORDATORIO */}
         <div className="form-group" style={{ marginBottom: '1.25rem' }}>
           <label><Clock size={14} style={{ display: 'inline', marginRight: '4px' }} /> ¿Cuándo quieres recibir la alerta?</label>
           
@@ -179,7 +181,6 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
           )}
         </div>
 
-        {/* 2. SELECCIÓN DE TONO */}
         <div className="form-group" style={{ marginBottom: '1.25rem' }}>
           <label><Music size={14} style={{ display: 'inline', marginRight: '4px' }} /> Tono de Alarma / Notificación</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.35rem' }}>
@@ -231,7 +232,6 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
           </div>
         </div>
 
-        {/* BOTONES */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.25rem' }}>
           <button className="btn btn-secondary" onClick={onClose}>
             Cancelar

@@ -1,4 +1,4 @@
-// Helper para integración con Calendario y Notificaciones del Sistema (Barra Superior WhatsApp style)
+// Helper para integración con Calendario y Notificaciones del Sistema
 
 export const openCalendarEvent = (turno) => {
   const [year, month, day] = turno.fecha.split('-');
@@ -27,7 +27,7 @@ export const requestNotificationPermission = async () => {
 };
 
 /**
- * Muestra una notificación nativa en la BARRA SUPERIOR del sistema (Android / iOS / Windows) estilo WhatsApp
+ * Muestra una notificación nativa en la BARRA SUPERIOR del sistema con ícono de Reloj monocromático (badge.svg)
  */
 export const showSystemNotification = async (title, bodyText, extraOptions = {}) => {
   try {
@@ -45,8 +45,8 @@ export const showSystemNotification = async (title, bodyText, extraOptions = {})
 
     const options = {
       body: bodyText,
-      icon: '/logo.jpg',
-      badge: '/logo.jpg',
+      icon: '/icon.svg',
+      badge: '/badge.svg', // Icono monocromático transparente para la barra superior de Android sin cuadro blanco
       vibrate: [300, 100, 300, 100, 400],
       tag: 'turno-sys-notif-' + Date.now(),
       renotify: true,
@@ -54,7 +54,6 @@ export const showSystemNotification = async (title, bodyText, extraOptions = {})
       ...extraOptions
     };
 
-    // Requerido para Android Chrome: Notificaciones vía ServiceWorker para salir en la barra superior
     if ('serviceWorker' in navigator) {
       const reg = await navigator.serviceWorker.ready;
       if (reg && reg.showNotification) {
@@ -63,16 +62,29 @@ export const showSystemNotification = async (title, bodyText, extraOptions = {})
       }
     }
 
-    // Fallback estándar para navegadores de escritorio
     new Notification(title, options);
     return true;
   } catch (err) {
     console.error('Error disparando notificación:', err);
     try {
-      new Notification(title, { body: bodyText, icon: '/logo.jpg' });
+      new Notification(title, { body: bodyText, icon: '/icon.svg', badge: '/badge.svg' });
       return true;
     } catch (e) {
       return false;
     }
+  }
+};
+
+/**
+ * Programar notificación en segundo plano vía ServiceWorker para que suene incluso con la app cerrada
+ */
+export const scheduleBackgroundNotification = (title, body, delayMs) => {
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'SCHEDULE_REMINDER',
+      title,
+      body,
+      delayMs
+    });
   }
 };
