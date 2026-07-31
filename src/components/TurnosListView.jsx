@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CalendarPlus, Bell, CheckCircle2, PlayCircle } from 'lucide-react';
-import { openCalendarEvent } from '../utils/calendarHelper';
+import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CheckCircle2, PlayCircle } from 'lucide-react';
 
 const formatFechaCompleta = (fechaStr, horaStr) => {
   if (!fechaStr) return horaStr ? `${horaStr} hs` : '';
@@ -22,8 +21,7 @@ export const TurnosListView = ({
   onSelectTurno, 
   onDeleteTurno, 
   onOpenNewTurno,
-  onUpdateStatus,
-  onOpenReminder
+  onUpdateStatus
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('proximos');
@@ -142,7 +140,6 @@ export const TurnosListView = ({
                       {t.estado === 'nuevo' ? 'NUEVO' : t.estado.toUpperCase()}
                     </span>
 
-                    {/* Nombre del día, número de día y hora: ej: "Lunes 7 de Junio - 09:00 hs" */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>
                       <Clock size={13} />
                       <span>{formatFechaCompleta(t.fecha, t.horaInicio)}</span>
@@ -206,30 +203,7 @@ export const TurnosListView = ({
                   )}
                 </div>
 
-                {/* Acciones */}
-                <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.65rem' }}>
-                  <button 
-                    className="btn btn-secondary"
-                    onClick={() => openCalendarEvent(t)}
-                    style={{ flex: 1, fontSize: '0.775rem', padding: '0.4rem 0.5rem', minHeight: '34px', gap: '0.35rem' }}
-                    title="Agendar en el Calendario de Celular"
-                  >
-                    <CalendarPlus size={14} style={{ color: 'var(--accent-cyan)' }} />
-                    <span>Calendario</span>
-                  </button>
-
-                  <button 
-                    className="btn btn-secondary"
-                    onClick={() => onOpenReminder(t)}
-                    style={{ flex: 1, fontSize: '0.775rem', padding: '0.4rem 0.5rem', minHeight: '34px', gap: '0.35rem' }}
-                    title="Configurar hora y tono del Recordatorio"
-                  >
-                    <Bell size={14} style={{ color: 'var(--accent-amber)' }} />
-                    <span>Recordatorio</span>
-                  </button>
-                </div>
-
-                {/* Acciones Secundarias */}
+                {/* Acciones Secundarias Limpias (Sin botones de Calendario ni Recordatorio) */}
                 <div style={{ display: 'flex', gap: '0.4rem', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid var(--border-color)' }}>
                   <button 
                     className="btn btn-secondary" 

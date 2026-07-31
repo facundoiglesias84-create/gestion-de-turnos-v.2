@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText, CalendarPlus, DollarSign, Bell } from 'lucide-react';
-import { openCalendarEvent } from '../utils/calendarHelper';
+import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText, DollarSign } from 'lucide-react';
 
-export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, onOpenReminder }) => {
+export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
   const [newTaskText, setNewTaskText] = useState('');
   const [newTaskPrice, setNewTaskPrice] = useState('');
 
@@ -97,30 +96,6 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, onOpen
               ${totalPrecio.toLocaleString('es-AR')}
             </strong>
           </div>
-        </div>
-
-        {/* Acciones */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-          <button 
-            className="btn btn-secondary" 
-            onClick={() => openCalendarEvent(turno)}
-            style={{ flex: 1, fontSize: '0.825rem', padding: '0.5rem', gap: '0.4rem' }}
-          >
-            <CalendarPlus size={16} style={{ color: 'var(--accent-cyan)' }} />
-            <span>📅 Calendario</span>
-          </button>
-
-          <button 
-            className="btn btn-secondary" 
-            onClick={() => {
-              onClose();
-              if (onOpenReminder) onOpenReminder(turno);
-            }}
-            style={{ flex: 1, fontSize: '0.825rem', padding: '0.5rem', gap: '0.4rem' }}
-          >
-            <Bell size={16} style={{ color: 'var(--accent-amber)' }} />
-            <span>🔔 Recordatorio</span>
-          </button>
         </div>
 
         {/* Cambiar Estado */}
