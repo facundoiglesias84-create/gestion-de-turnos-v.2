@@ -1,9 +1,9 @@
 // Servicio de almacenamiento local con estado inicial de ejemplo
 
 const STORAGE_KEY = 'turnoflow_turnos_v1';
+const SERVICES_KEY = 'turnoflow_servicios_v1';
 const CONFIG_KEY = 'turnoflow_xata_config';
 
-// Fecha de hoy formateada YYYY-MM-DD
 const getTodayFormatted = () => {
   const d = new Date();
   const year = d.getFullYear();
@@ -11,6 +11,15 @@ const getTodayFormatted = () => {
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+export const DEFAULT_SERVICIOS = [
+  { id: 's-1', nombre: 'Mantenimiento Preventivo', descripcion: 'Revisión técnica periódica', precioBase: 25000 },
+  { id: 's-2', nombre: 'Consultoría Presencial', descripcion: 'Asesoramiento y diagnóstico', precioBase: 18000 },
+  { id: 's-3', nombre: 'Servicio Express', descripcion: 'Atención rápida en el día', precioBase: 15000 },
+  { id: 's-4', nombre: 'Diagnóstico General', descripcion: 'Escaneo computarizado', precioBase: 12000 },
+  { id: 's-5', nombre: 'Atención Médica / Clínica', descripcion: 'Consulta profesional', precioBase: 30000 },
+  { id: 's-6', nombre: 'Corte y Estética', descripcion: 'Servicio de estética', precioBase: 10000 }
+];
 
 const INITIAL_TURNOS = [
   {
@@ -20,14 +29,14 @@ const INITIAL_TURNOS = [
     clienteEmail: 'carlos.gomez@email.com',
     fecha: getTodayFormatted(),
     horaInicio: '09:00',
-    horaFin: '10:00',
+    horaFin: '09:00',
     servicio: 'Mantenimiento Preventivo',
-    estado: 'confirmado', // 'confirmado' | 'pendiente' | 'completado' | 'cancelado'
+    estado: 'confirmado',
     notas: 'Cliente solicita revisión de presión y escaneo computarizado.',
     tareas: [
-      { id: 'tk-1', descripcion: 'Diagnóstico por computadora (ODB2)', completada: true },
-      { id: 'tk-2', descripcion: 'Cambio de aceite de motor y filtro', completada: true },
-      { id: 'tk-3', descripcion: 'Inspección de frenos y amortiguadores', completada: false }
+      { id: 'tk-1', descripcion: 'Diagnóstico por computadora (ODB2)', precio: 5000, completada: true },
+      { id: 'tk-2', descripcion: 'Cambio de aceite de motor y filtro', precio: 15000, completada: true },
+      { id: 'tk-3', descripcion: 'Inspección de frenos y amortiguadores', precio: 5000, completada: false }
     ],
     createdAt: new Date().toISOString()
   },
@@ -38,31 +47,13 @@ const INITIAL_TURNOS = [
     clienteEmail: 'maria.rodriguez@email.com',
     fecha: getTodayFormatted(),
     horaInicio: '11:30',
-    horaFin: '12:30',
+    horaFin: '11:30',
     servicio: 'Consultoría Presencial',
     estado: 'confirmado',
     notas: 'Primera sesión de asesoramiento técnico.',
     tareas: [
-      { id: 'tk-4', descripcion: 'Revisión de documentación previa', completada: true },
-      { id: 'tk-5', descripcion: 'Definición de plan de acción', completada: false },
-      { id: 'tk-6', descripcion: 'Entrega de informe inicial', completada: false }
-    ],
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 't-103',
-    clienteNombre: 'Lucas Peralta',
-    clienteTelefono: '+54 9 11 2233-4455',
-    clienteEmail: 'l.peralta@email.com',
-    fecha: getTodayFormatted(),
-    horaInicio: '15:00',
-    horaFin: '16:00',
-    servicio: 'Servicio Express',
-    estado: 'pendiente',
-    notas: 'Pendiente de confirmación de pago de seña.',
-    tareas: [
-      { id: 'tk-7', descripcion: 'Verificación de componentes', completada: false },
-      { id: 'tk-8', descripcion: 'Limpieza y empaquetado', completada: false }
+      { id: 'tk-4', descripcion: 'Revisión de documentación previa', precio: 8000, completada: true },
+      { id: 'tk-5', descripcion: 'Definición de plan de acción', precio: 10000, completada: false }
     ],
     createdAt: new Date().toISOString()
   }
@@ -77,7 +68,6 @@ export const getStoredTurnos = () => {
     }
     return JSON.parse(data);
   } catch (err) {
-    console.error('Error cargando turnos de LocalStorage:', err);
     return INITIAL_TURNOS;
   }
 };
@@ -90,12 +80,33 @@ export const saveTurnos = (turnos) => {
   }
 };
 
+export const getStoredServicios = () => {
+  try {
+    const data = localStorage.getItem(SERVICES_KEY);
+    if (!data) {
+      localStorage.setItem(SERVICES_KEY, JSON.stringify(DEFAULT_SERVICIOS));
+      return DEFAULT_SERVICIOS;
+    }
+    return JSON.parse(data);
+  } catch (err) {
+    return DEFAULT_SERVICIOS;
+  }
+};
+
+export const saveServicios = (servicios) => {
+  try {
+    localStorage.setItem(SERVICES_KEY, JSON.stringify(servicios));
+  } catch (err) {
+    console.error('Error guardando servicios:', err);
+  }
+};
+
 export const getXataConfig = () => {
   try {
     const data = localStorage.getItem(CONFIG_KEY);
-    return data ? JSON.parse(data) : { apiKey: '', dbUrl: '', branch: 'main', enabled: false };
+    return data ? JSON.parse(data) : { apiKey: '', dbUrl: '', branch: 'main', enabled: true };
   } catch (err) {
-    return { apiKey: '', dbUrl: '', branch: 'main', enabled: false };
+    return { apiKey: '', dbUrl: '', branch: 'main', enabled: true };
   }
 };
 

@@ -3,21 +3,23 @@ import { Header } from './components/Header';
 import { MobileNav } from './components/MobileNav';
 import { CalendarView } from './components/CalendarView';
 import { TurnosListView } from './components/TurnosListView';
+import { ServiciosView } from './components/ServiciosView';
 import { StatsOverview } from './components/StatsOverview';
 import { TurnoModal } from './components/TurnoModal';
 import { TurnoDetailModal } from './components/TurnoDetailModal';
 import { XataConfigModal } from './components/XataConfigModal';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
 
-import { getStoredTurnos, saveTurnos } from './services/storageService';
+import { getStoredTurnos, saveTurnos, getStoredServicios, saveServicios } from './services/storageService';
 import { fetchTurnosFromXata, syncTurnoToXata, deleteTurnoFromXata, checkXataStatus } from './services/xataService';
 
 export function App() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [turnos, setTurnos] = useState([]);
+  const [servicios, setServicios] = useState(() => getStoredServicios());
   const [selectedDate, setSelectedDate] = useState(todayStr);
-  const [activeTab, setActiveTab] = useState('calendar');
+  const [activeTab, setActiveTab] = useState('calendar'); // 'calendar' | 'turnos' | 'servicios' | 'stats'
 
   const [isNewTurnoOpen, setIsNewTurnoOpen] = useState(false);
   const [newTurnoDefaultDate, setNewTurnoDefaultDate] = useState(todayStr);
@@ -32,6 +34,7 @@ export function App() {
   const [isXataConfigOpen, setIsXataConfigOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Carga inicial
   useEffect(() => {
     const initData = async () => {
       const status = await checkXataStatus();
@@ -60,6 +63,18 @@ export function App() {
       saveTurnos(turnos);
     }
   }, [turnos, isLoading]);
+
+  useEffect(() => {
+    saveServicios(servicios);
+  }, [servicios]);
+
+  const handleAddServicio = (nuevoServicio) => {
+    setServicios([...servicios, nuevoServicio]);
+  };
+
+  const handleDeleteServicio = (id) => {
+    setServicios(servicios.filter(s => s.id !== id));
+  };
 
   const handleCreateTurno = async (nuevoTurno) => {
     const updated = [nuevoTurno, ...turnos];
@@ -154,10 +169,17 @@ export function App() {
             >
               Lista de Turnos ({turnos.length})
             </button>
+
+            <button 
+              className={`tab-btn ${activeTab === 'servicios' ? 'active' : ''}`}
+              onClick={() => setActiveTab('servicios')}
+            >
+              Servicios & Categorías ({servicios.length})
+            </button>
           </div>
         </div>
 
-        {(activeTab === 'calendar' || activeTab === 'stats') && (
+        {activeTab === 'calendar' && (
           <CalendarView 
             turnos={turnos}
             selectedDate={selectedDate}
@@ -167,24 +189,33 @@ export function App() {
           />
         )}
 
-        <TurnosListView 
-          turnos={turnos}
-          selectedDate={selectedDate}
-          onSelectTurno={handleSelectTurno}
-          onDeleteTurno={handleRequestDelete}
-          onOpenNewTurno={handleOpenNewTurno}
-          onUpdateStatus={(id, status) => {
-            const turno = turnos.find((t) => t.id === id);
-            if (turno) handleUpdateTurno({ ...turno, estado: status });
-          }}
-        />
+        {activeTab === 'servicios' && (
+          <ServiciosView 
+            servicios={servicios}
+            onAddServicio={handleAddServicio}
+            onDeleteServicio={handleDeleteServicio}
+          />
+        )}
+
+        {(activeTab === 'turnos' || activeTab === 'calendar' || activeTab === 'stats') && (
+          <TurnosListView 
+            turnos={turnos}
+            selectedDate={selectedDate}
+            onSelectTurno={handleSelectTurno}
+            onDeleteTurno={handleRequestDelete}
+            onOpenNewTurno={handleOpenNewTurno}
+            onUpdateStatus={(id, status) => {
+              const turno = turnos.find((t) => t.id === id);
+              if (turno) handleUpdateTurno({ ...turno, estado: status });
+            }}
+          />
+        )}
       </main>
 
       <MobileNav 
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenNewTurno={handleOpenNewTurno}
-        onOpenXataConfig={() => setIsXataConfigOpen(true)}
       />
 
       <TurnoModal 
@@ -193,6 +224,7 @@ export function App() {
         onSave={handleCreateTurno}
         defaultDate={newTurnoDefaultDate}
         turnosExistentes={turnos}
+        servicios={servicios}
       />
 
       <TurnoDetailModal 

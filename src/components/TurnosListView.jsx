@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CalendarPlus, ExternalLink, Bell } from 'lucide-react';
-import { downloadIcsFile, getGoogleCalendarUrl, requestNotificationPermission, sendTurnoReminderNotification } from '../utils/calendarHelper';
+import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CalendarPlus, DollarSign } from 'lucide-react';
+import { downloadIcsFile } from '../utils/calendarHelper';
 
 export const TurnosListView = ({ 
   turnos, 
@@ -28,22 +28,11 @@ export const TurnosListView = ({
     return true;
   });
 
-  const handlePushReminder = async (t) => {
-    const granted = await requestNotificationPermission();
-    if (granted) {
-      sendTurnoReminderNotification(t);
-      alert(`🔔 Recordatorio activado para ${t.clienteNombre}`);
-    } else {
-      alert('Por favor habilita los permisos de notificaciones en tu navegador para recibir recordatorios.');
-    }
-  };
-
   return (
     <div style={{ marginTop: '1.25rem' }}>
       <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', justifyContent: 'space-between' }}>
           
-          {/* Búsqueda */}
           <div style={{ position: 'relative', flex: '1', minWidth: '220px' }}>
             <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
@@ -56,7 +45,6 @@ export const TurnosListView = ({
             />
           </div>
 
-          {/* Filtro por fecha */}
           <button
             className={`btn ${onlySelectedDate ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setOnlySelectedDate(!onlySelectedDate)}
@@ -67,7 +55,6 @@ export const TurnosListView = ({
           </button>
         </div>
 
-        {/* Filtros de Estado */}
         <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.85rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
           {['todos', 'confirmado', 'pendiente', 'completado', 'cancelado'].map((st) => (
             <button
@@ -82,7 +69,6 @@ export const TurnosListView = ({
         </div>
       </div>
 
-      {/* Lista de Tarjetas de Turnos */}
       {filteredTurnos.length === 0 ? (
         <div className="glass-panel" style={{ padding: '2.5rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
           <CalendarIcon size={40} style={{ margin: '0 auto 0.75rem', opacity: 0.4 }} />
@@ -104,6 +90,7 @@ export const TurnosListView = ({
             const totalTasks = t.tareas ? t.tareas.length : 0;
             const completedTasks = t.tareas ? t.tareas.filter(task => task.completada).length : 0;
             const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            const totalPrecio = t.tareas ? t.tareas.reduce((acc, tk) => acc + (tk.precio || 0), 0) : 0;
 
             return (
               <div key={t.id} className="glass-panel" style={{ padding: '1.1rem', display: 'flex', flexDirection: 'column' }}>
@@ -113,7 +100,6 @@ export const TurnosListView = ({
                       {t.estado}
                     </span>
 
-                    {/* Muestra solo la Hora de Inicio */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>
                       <Clock size={14} />
                       <span>{t.horaInicio} hs</span>
@@ -129,8 +115,9 @@ export const TurnosListView = ({
                     <span>{t.clienteTelefono || 'Sin teléfono'}</span>
                   </div>
 
-                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.45rem 0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginBottom: '0.85rem', fontSize: '0.825rem', color: 'var(--text-primary)' }}>
-                    <strong>Servicio:</strong> {t.servicio}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.03)', padding: '0.45rem 0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginBottom: '0.85rem', fontSize: '0.825rem' }}>
+                    <div><strong>Servicio:</strong> {t.servicio}</div>
+                    <div style={{ color: 'var(--accent-emerald)', fontWeight: 800 }}>${totalPrecio.toLocaleString('es-AR')}</div>
                   </div>
 
                   {/* Tareas */}
@@ -138,7 +125,7 @@ export const TurnosListView = ({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem', fontSize: '0.8rem' }}>
                       <span style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                         <CheckSquare size={13} style={{ color: 'var(--accent-cyan)' }} />
-                        Tareas a Realizar ({completedTasks}/{totalTasks})
+                        Tareas ({completedTasks}/{totalTasks})
                       </span>
                       <span style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>{progress}%</span>
                     </div>
@@ -150,9 +137,14 @@ export const TurnosListView = ({
                     {totalTasks > 0 && (
                       <div style={{ marginTop: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                         {t.tareas.slice(0, 2).map((tk) => (
-                          <div key={tk.id} style={{ fontSize: '0.75rem', color: tk.completada ? 'var(--text-muted)' : 'var(--text-secondary)', textDecoration: tk.completada ? 'line-through' : 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: tk.completada ? 'var(--accent-emerald)' : 'var(--text-muted)' }}></span>
-                            {tk.descripcion}
+                          <div key={tk.id} style={{ fontSize: '0.75rem', color: tk.completada ? 'var(--text-muted)' : 'var(--text-secondary)', textDecoration: tk.completada ? 'line-through' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: tk.completada ? 'var(--accent-emerald)' : 'var(--text-muted)' }}></span>
+                              {tk.descripcion}
+                            </span>
+                            {tk.precio > 0 && (
+                              <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>${tk.precio.toLocaleString('es-AR')}</span>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -160,37 +152,15 @@ export const TurnosListView = ({
                   </div>
                 </div>
 
-                {/* Acciones de Exportación a Celular / Calendario */}
-                <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '0.65rem' }}>
+                {/* ÚNICO BOTÓN: "📅 Calendario" */}
+                <div style={{ marginBottom: '0.65rem' }}>
                   <button 
                     className="btn btn-secondary"
                     onClick={() => downloadIcsFile(t)}
-                    style={{ flex: 1, fontSize: '0.725rem', padding: '0.35rem 0.5rem', minHeight: '32px' }}
-                    title="Descargar evento para Calendario de Celular (.ics)"
+                    style={{ width: '100%', fontSize: '0.775rem', padding: '0.4rem 0.5rem', minHeight: '34px', gap: '0.4rem' }}
                   >
-                    <CalendarPlus size={13} style={{ color: 'var(--accent-cyan)' }} />
-                    <span>iCal Celular</span>
-                  </button>
-
-                  <a 
-                    href={getGoogleCalendarUrl(t)} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="btn btn-secondary"
-                    style={{ flex: 1, fontSize: '0.725rem', padding: '0.35rem 0.5rem', minHeight: '32px', textDecoration: 'none' }}
-                    title="Agregar directamente a Google Calendar"
-                  >
-                    <ExternalLink size={13} style={{ color: 'var(--accent-indigo)' }} />
-                    <span>Google Cal</span>
-                  </a>
-
-                  <button 
-                    className="btn btn-secondary btn-icon"
-                    onClick={() => handlePushReminder(t)}
-                    style={{ width: '32px', height: '32px' }}
-                    title="Activar Recordatorio Notificación"
-                  >
-                    <Bell size={13} style={{ color: 'var(--accent-amber)' }} />
+                    <CalendarPlus size={14} style={{ color: 'var(--accent-cyan)' }} />
+                    <span>📅 Calendario</span>
                   </button>
                 </div>
 

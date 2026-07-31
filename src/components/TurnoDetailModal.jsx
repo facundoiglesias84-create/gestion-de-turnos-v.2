@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText, CalendarPlus, ExternalLink, Bell } from 'lucide-react';
-import { downloadIcsFile, getGoogleCalendarUrl, requestNotificationPermission, sendTurnoReminderNotification } from '../utils/calendarHelper';
+import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText, CalendarPlus, DollarSign } from 'lucide-react';
+import { downloadIcsFile } from '../utils/calendarHelper';
 
 export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
   const [newTaskText, setNewTaskText] = useState('');
+  const [newTaskPrice, setNewTaskPrice] = useState('');
 
   if (!isOpen || !turno) return null;
 
@@ -20,11 +21,13 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
     const newTask = {
       id: 'tk-' + Date.now(),
       descripcion: newTaskText.trim(),
+      precio: parseFloat(newTaskPrice) || 0,
       completada: false
     };
     const updatedTareas = [...(turno.tareas || []), newTask];
     onUpdateTurno({ ...turno, tareas: updatedTareas });
     setNewTaskText('');
+    setNewTaskPrice('');
   };
 
   const handleDeleteTask = (taskId) => {
@@ -36,19 +39,11 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
     onUpdateTurno({ ...turno, estado: newStatus });
   };
 
-  const handlePushReminder = async () => {
-    const granted = await requestNotificationPermission();
-    if (granted) {
-      sendTurnoReminderNotification(turno);
-      alert(`🔔 Recordatorio activado para ${turno.clienteNombre}`);
-    } else {
-      alert('Por favor habilita las notificaciones en tu navegador.');
-    }
-  };
-
   const totalTasks = turno.tareas ? turno.tareas.length : 0;
   const completedTasks = turno.tareas ? turno.tareas.filter((t) => t.completada).length : 0;
   const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  
+  const totalPrecio = turno.tareas ? turno.tareas.reduce((acc, t) => acc + (t.precio || 0), 0) : 0;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -92,41 +87,23 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
 
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
             <div style={{ color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <Mail size={14} /> Email
+              <DollarSign size={14} style={{ color: 'var(--accent-emerald)' }} /> Total del Turno
             </div>
-            <strong style={{ overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{turno.clienteEmail || 'Sin registrar'}</strong>
+            <strong style={{ color: 'var(--accent-emerald)', fontSize: '1rem' }}>
+              ${totalPrecio.toLocaleString('es-AR')}
+            </strong>
           </div>
         </div>
 
-        {/* Exportar al Calendario del Celular / Recordatorio */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {/* ÚNICO BOTÓN: "📅 Calendario" */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
           <button 
             className="btn btn-secondary" 
             onClick={() => downloadIcsFile(turno)}
-            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
+            style={{ width: '100%', fontSize: '0.85rem', padding: '0.55rem', gap: '0.5rem' }}
           >
-            <CalendarPlus size={14} style={{ color: 'var(--accent-cyan)' }} />
-            <span>Descargar Evento Celular (.ics)</span>
-          </button>
-
-          <a 
-            href={getGoogleCalendarUrl(turno)}
-            target="_blank" 
-            rel="noreferrer"
-            className="btn btn-secondary"
-            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', textDecoration: 'none' }}
-          >
-            <ExternalLink size={14} style={{ color: 'var(--accent-indigo)' }} />
-            <span>Abrir en Google Calendar</span>
-          </a>
-
-          <button 
-            className="btn btn-secondary" 
-            onClick={handlePushReminder}
-            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
-          >
-            <Bell size={14} style={{ color: 'var(--accent-amber)' }} />
-            <span>Recordatorio Push</span>
+            <CalendarPlus size={16} style={{ color: 'var(--accent-cyan)' }} />
+            <span>📅 Calendario</span>
           </button>
         </div>
 
@@ -155,12 +132,12 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </div>
         </div>
 
-        {/* TAREAS A REALIZAR */}
+        {/* TAREAS Y PRECIOS */}
         <div className="tasks-section" style={{ margin: 0 }}>
           <div className="tasks-header">
             <div className="tasks-title">
               <CheckSquare size={16} />
-              <span>Tareas a Realizar ({completedTasks} de {totalTasks} completadas)</span>
+              <span>Tareas a Realizar ({completedTasks} de {totalTasks})</span>
             </div>
             <span style={{ fontWeight: 800, color: 'var(--accent-cyan)' }}>{progressPercent}%</span>
           </div>
@@ -169,17 +146,23 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
             <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
           </div>
 
-          <form onSubmit={handleAddTask} className="add-task-row">
+          <form onSubmit={handleAddTask} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '0.35rem', marginBottom: '0.6rem' }}>
             <input 
               type="text" 
               className="input-field" 
-              placeholder="Agregar nueva tarea..."
+              placeholder="Nueva tarea..."
               value={newTaskText}
               onChange={(e) => setNewTaskText(e.target.value)}
             />
+            <input 
+              type="number" 
+              className="input-field" 
+              placeholder="Precio ($)"
+              value={newTaskPrice}
+              onChange={(e) => setNewTaskPrice(e.target.value)}
+            />
             <button type="submit" className="btn btn-secondary">
               <Plus size={16} />
-              <span>Agregar</span>
             </button>
           </form>
 
@@ -204,13 +187,17 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
                     </span>
                   </div>
 
+                  <span style={{ fontSize: '0.825rem', color: 'var(--accent-emerald)', fontWeight: 700, marginLeft: '0.5rem' }}>
+                    ${t.precio ? t.precio.toLocaleString('es-AR') : 0}
+                  </span>
+
                   <button 
                     type="button" 
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteTask(t.id);
                     }}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', marginLeft: '0.3rem' }}
                     title="Eliminar tarea"
                   >
                     <Trash2 size={14} />

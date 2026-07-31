@@ -1,41 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, Phone, Mail, Plus, Trash2, CheckSquare, Sparkles, AlertTriangle } from 'lucide-react';
+import { X, Calendar, Clock, User, Phone, Mail, Plus, Trash2, CheckSquare, Sparkles, AlertTriangle, DollarSign } from 'lucide-react';
 
-const SERVICIOS_SUGERIDOS = [
-  'Mantenimiento Preventivo',
-  'Consultoría Presencial',
-  'Servicio Express',
-  'Diagnóstico General',
-  'Atención Médica / Clínica',
-  'Corte y Estética'
-];
-
-export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExistentes = [] }) => {
+export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExistentes = [], servicios = [] }) => {
   const [clienteNombre, setClienteNombre] = useState('');
   const [clienteTelefono, setClienteTelefono] = useState('');
   const [clienteEmail, setClienteEmail] = useState('');
   const [fecha, setFecha] = useState(defaultDate || new Date().toISOString().split('T')[0]);
   const [horaInicio, setHoraInicio] = useState('10:00');
-  const [servicio, setServicio] = useState(SERVICIOS_SUGERIDOS[0]);
+  const [servicio, setServicio] = useState(servicios[0]?.nombre || 'Mantenimiento Preventivo');
   const [estado, setEstado] = useState('confirmado');
   const [notas, setNotas] = useState('');
   
   const [conflictError, setConflictError] = useState('');
 
   const [tareas, setTareas] = useState([
-    { id: 't1', descripcion: 'Revisión inicial del requerimiento', completada: false },
-    { id: 't2', descripcion: 'Ejecución del servicio contratado', completada: false }
+    { id: 't1', descripcion: 'Revisión inicial del requerimiento', precio: 5000, completada: false },
+    { id: 't2', descripcion: 'Ejecución del servicio contratado', precio: 15000, completada: false }
   ]);
   const [nuevaTareaText, setNuevaTareaText] = useState('');
+  const [nuevaTareaPrecio, setNuevaTareaPrecio] = useState('');
 
   useEffect(() => {
     if (defaultDate) {
       setFecha(defaultDate);
     }
+    if (servicios.length > 0 && !servicio) {
+      setServicio(servicios[0].nombre);
+    }
     setConflictError('');
-  }, [defaultDate, isOpen]);
+  }, [defaultDate, isOpen, servicios]);
 
-  // Verificar solapamiento de horario al cambiar fecha o horaInicio
   useEffect(() => {
     if (fecha && horaInicio) {
       const existeConflicto = turnosExistentes.some((t) => 
@@ -60,14 +54,20 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
     const newTask = {
       id: 'tk-' + Date.now(),
       descripcion: nuevaTareaText.trim(),
+      precio: parseFloat(nuevaTareaPrecio) || 0,
       completada: false
     };
     setTareas([...tareas, newTask]);
     setNuevaTareaText('');
+    setNuevaTareaPrecio('');
   };
 
   const handleEliminarTarea = (id) => {
     setTareas(tareas.filter((t) => t.id !== id));
+  };
+
+  const calcularTotalTurno = () => {
+    return tareas.reduce((acc, t) => acc + (t.precio || 0), 0);
   };
 
   const handleSubmit = (e) => {
@@ -77,9 +77,7 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
       return;
     }
 
-    if (conflictError) {
-      return;
-    }
+    if (conflictError) return;
 
     const nuevoTurno = {
       id: 't-' + Date.now(),
@@ -88,7 +86,7 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
       clienteEmail: clienteEmail.trim(),
       fecha,
       horaInicio,
-      horaFin: horaInicio, // Se mantiene horaInicio como valor unico
+      horaFin: horaInicio,
       servicio,
       estado,
       notas: notas.trim(),
@@ -114,7 +112,6 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Alerta de Conflicto de Horario */}
           {conflictError && (
             <div 
               style={{ 
@@ -135,7 +132,6 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
             </div>
           )}
 
-          {/* Datos del Cliente */}
           <div className="form-group">
             <label><User size={14} style={{ display: 'inline', marginRight: '4px' }} /> Nombre del Cliente *</label>
             <input 
@@ -172,7 +168,6 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
             </div>
           </div>
 
-          {/* Solo Fecha y Hora de Inicio */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div className="form-group">
               <label>Fecha del Turno</label>
@@ -197,13 +192,13 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
             </div>
           </div>
 
-          {/* Servicio y Estado */}
+          {/* Servicio cargado dinámicamente desde la vista de Servicios */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div className="form-group">
               <label>Servicio / Categoría</label>
               <select className="select-field" value={servicio} onChange={(e) => setServicio(e.target.value)}>
-                {SERVICIOS_SUGERIDOS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                {servicios.map((s) => (
+                  <option key={s.id} value={s.nombre}>{s.nombre}</option>
                 ))}
               </select>
             </div>
@@ -219,28 +214,33 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
             </div>
           </div>
 
-          {/* TAREAS A REALIZAR */}
+          {/* TAREAS Y PRECIOS POR TAREA */}
           <div className="tasks-section">
             <div className="tasks-header">
               <div className="tasks-title">
                 <CheckSquare size={16} />
-                <span>Tareas a realizar para este turno ({tareas.length})</span>
+                <span>Tareas y Precios ({tareas.length})</span>
+              </div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--accent-emerald)', fontWeight: 800 }}>
+                Total: ${calcularTotalTurno().toLocaleString('es-AR')}
               </div>
             </div>
 
-            <div className="add-task-row">
+            {/* Input para agregar tarea con PRECIO */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '0.35rem', marginBottom: '0.6rem' }}>
               <input 
                 type="text" 
                 className="input-field" 
-                placeholder="Añadir una tarea o actividad..."
+                placeholder="Descripción de la tarea..."
                 value={nuevaTareaText}
                 onChange={(e) => setNuevaTareaText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAgregarTarea(e);
-                  }
-                }}
+              />
+              <input 
+                type="number" 
+                className="input-field" 
+                placeholder="Precio ($)"
+                value={nuevaTareaPrecio}
+                onChange={(e) => setNuevaTareaPrecio(e.target.value)}
               />
               <button 
                 type="button" 
@@ -248,18 +248,22 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
                 onClick={handleAgregarTarea}
               >
                 <Plus size={16} />
-                <span>Agregar</span>
               </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', maxHeight: '140px', overflowY: 'auto' }}>
               {tareas.map((t) => (
                 <div key={t.id} className="task-item">
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>{t.descripcion}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>{t.descripcion}</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--accent-emerald)', fontWeight: 700, marginLeft: '0.5rem' }}>
+                      ${t.precio ? t.precio.toLocaleString('es-AR') : 0}
+                    </span>
+                  </div>
                   <button 
                     type="button" 
                     onClick={() => handleEliminarTarea(t.id)}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px', marginLeft: '0.4rem' }}
                     title="Eliminar tarea"
                   >
                     <Trash2 size={14} />
@@ -269,7 +273,6 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
             </div>
           </div>
 
-          {/* Notas */}
           <div className="form-group" style={{ marginTop: '1rem' }}>
             <label>Notas o Requerimientos Especiales</label>
             <textarea 

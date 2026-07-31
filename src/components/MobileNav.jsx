@@ -1,14 +1,14 @@
 import React from 'react';
-import { Calendar, ListFilter, Plus, BarChart3, Database } from 'lucide-react';
+import { Calendar, ListFilter, Plus, BarChart3, Tag } from 'lucide-react';
 
-export const MobileNav = ({ activeTab, setActiveTab, onOpenNewTurno, onOpenXataConfig }) => {
+export const MobileNav = ({ activeTab, setActiveTab, onOpenNewTurno }) => {
   return (
     <nav className="mobile-nav">
       <button 
         className={`mobile-nav-item ${activeTab === 'calendar' ? 'active' : ''}`}
         onClick={() => setActiveTab('calendar')}
       >
-        <Calendar size={20} />
+        <Calendar size={19} />
         <span>Calendario</span>
       </button>
 
@@ -16,7 +16,7 @@ export const MobileNav = ({ activeTab, setActiveTab, onOpenNewTurno, onOpenXataC
         className={`mobile-nav-item ${activeTab === 'turnos' ? 'active' : ''}`}
         onClick={() => setActiveTab('turnos')}
       >
-        <ListFilter size={20} />
+        <ListFilter size={19} />
         <span>Turnos</span>
       </button>
 
@@ -29,19 +29,19 @@ export const MobileNav = ({ activeTab, setActiveTab, onOpenNewTurno, onOpenXataC
       </button>
 
       <button 
-        className={`mobile-nav-item ${activeTab === 'stats' ? 'active' : ''}`}
-        onClick={() => setActiveTab('stats')}
+        className={`mobile-nav-item ${activeTab === 'servicios' ? 'active' : ''}`}
+        onClick={() => setActiveTab('servicios')}
       >
-        <BarChart3 size={20} />
-        <span>Métricas</span>
+        <Tag size={19} />
+        <span>Servicios</span>
       </button>
 
       <button 
-        className="mobile-nav-item"
-        onClick={onOpenXataConfig}
+        className={`mobile-nav-item ${activeTab === 'stats' ? 'active' : ''}`}
+        onClick={() => setActiveTab('stats')}
       >
-        <Database size={20} />
-        <span>Xata DB</span>
+        <BarChart3 size={19} />
+        <span>Métricas</span>
       </button>
     </nav>
   );
