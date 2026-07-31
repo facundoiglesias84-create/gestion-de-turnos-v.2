@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, Phone, Mail, Plus, Trash2, CheckSquare, Sparkles } from 'lucide-react';
+import { X, Calendar, Clock, User, Phone, Mail, Plus, Trash2, CheckSquare, Sparkles, AlertTriangle } from 'lucide-react';
 
 const SERVICIOS_SUGERIDOS = [
   'Mantenimiento Preventivo',
@@ -10,18 +10,18 @@ const SERVICIOS_SUGERIDOS = [
   'Corte y Estética'
 ];
 
-export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
+export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExistentes = [] }) => {
   const [clienteNombre, setClienteNombre] = useState('');
   const [clienteTelefono, setClienteTelefono] = useState('');
   const [clienteEmail, setClienteEmail] = useState('');
   const [fecha, setFecha] = useState(defaultDate || new Date().toISOString().split('T')[0]);
   const [horaInicio, setHoraInicio] = useState('10:00');
-  const [horaFin, setHoraFin] = useState('11:00');
   const [servicio, setServicio] = useState(SERVICIOS_SUGERIDOS[0]);
   const [estado, setEstado] = useState('confirmado');
   const [notas, setNotas] = useState('');
+  
+  const [conflictError, setConflictError] = useState('');
 
-  // Tareas a realizar para el turno
   const [tareas, setTareas] = useState([
     { id: 't1', descripcion: 'Revisión inicial del requerimiento', completada: false },
     { id: 't2', descripcion: 'Ejecución del servicio contratado', completada: false }
@@ -32,11 +32,28 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
     if (defaultDate) {
       setFecha(defaultDate);
     }
-  }, [defaultDate]);
+    setConflictError('');
+  }, [defaultDate, isOpen]);
+
+  // Verificar solapamiento de horario al cambiar fecha o horaInicio
+  useEffect(() => {
+    if (fecha && horaInicio) {
+      const existeConflicto = turnosExistentes.some((t) => 
+        t.fecha === fecha && 
+        t.horaInicio === horaInicio && 
+        t.estado !== 'cancelado'
+      );
+
+      if (existeConflicto) {
+        setConflictError(`⚠️ Ya existe un turno agendado para la fecha ${fecha} a las ${horaInicio} hs. Por favor selecciona otro horario.`);
+      } else {
+        setConflictError('');
+      }
+    }
+  }, [fecha, horaInicio, turnosExistentes]);
 
   if (!isOpen) return null;
 
-  // Agregar una tarea al turno
   const handleAgregarTarea = (e) => {
     e.preventDefault();
     if (!nuevaTareaText.trim()) return;
@@ -49,7 +66,6 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
     setNuevaTareaText('');
   };
 
-  // Eliminar tarea
   const handleEliminarTarea = (id) => {
     setTareas(tareas.filter((t) => t.id !== id));
   };
@@ -61,6 +77,10 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
       return;
     }
 
+    if (conflictError) {
+      return;
+    }
+
     const nuevoTurno = {
       id: 't-' + Date.now(),
       clienteNombre: clienteNombre.trim(),
@@ -68,7 +88,7 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
       clienteEmail: clienteEmail.trim(),
       fecha,
       horaInicio,
-      horaFin,
+      horaFin: horaInicio, // Se mantiene horaInicio como valor unico
       servicio,
       estado,
       notas: notas.trim(),
@@ -94,6 +114,27 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* Alerta de Conflicto de Horario */}
+          {conflictError && (
+            <div 
+              style={{ 
+                padding: '0.75rem 0.85rem', 
+                borderRadius: 'var(--radius-md)', 
+                background: 'rgba(244, 63, 94, 0.15)', 
+                border: '1px solid rgba(244, 63, 94, 0.3)',
+                color: '#f87171',
+                fontSize: '0.85rem',
+                marginBottom: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}
+            >
+              <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+              <span>{conflictError}</span>
+            </div>
+          )}
+
           {/* Datos del Cliente */}
           <div className="form-group">
             <label><User size={14} style={{ display: 'inline', marginRight: '4px' }} /> Nombre del Cliente *</label>
@@ -131,10 +172,10 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
             </div>
           </div>
 
-          {/* Fecha y Horarios */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+          {/* Solo Fecha y Hora de Inicio */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div className="form-group">
-              <label>Fecha</label>
+              <label>Fecha del Turno</label>
               <input 
                 type="date" 
                 className="input-field" 
@@ -145,23 +186,12 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
             </div>
 
             <div className="form-group">
-              <label>Hora Inicio</label>
+              <label><Clock size={14} style={{ display: 'inline', marginRight: '4px' }} /> Hora del Turno</label>
               <input 
                 type="time" 
                 className="input-field" 
                 value={horaInicio}
                 onChange={(e) => setHoraInicio(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Hora Fin</label>
-              <input 
-                type="time" 
-                className="input-field" 
-                value={horaFin}
-                onChange={(e) => setHoraFin(e.target.value)}
                 required
               />
             </div>
@@ -189,7 +219,7 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
             </div>
           </div>
 
-          {/* TAREAS A REALIZAR PARA ESTE TURNO */}
+          {/* TAREAS A REALIZAR */}
           <div className="tasks-section">
             <div className="tasks-header">
               <div className="tasks-title">
@@ -198,12 +228,11 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
               </div>
             </div>
 
-            {/* Input para agregar tarea */}
             <div className="add-task-row">
               <input 
                 type="text" 
                 className="input-field" 
-                placeholder="Añadir una tarea o actividad (ej: Cambio de filtro)..."
+                placeholder="Añadir una tarea o actividad..."
                 value={nuevaTareaText}
                 onChange={(e) => setNuevaTareaText(e.target.value)}
                 onKeyDown={(e) => {
@@ -217,14 +246,12 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
                 type="button" 
                 className="btn btn-secondary" 
                 onClick={handleAgregarTarea}
-                style={{ shrink: 0 }}
               >
                 <Plus size={16} />
                 <span>Agregar</span>
               </button>
             </div>
 
-            {/* Lista de tareas agregadas */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', maxHeight: '140px', overflowY: 'auto' }}>
               {tareas.map((t) => (
                 <div key={t.id} className="task-item">
@@ -239,15 +266,10 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
                   </button>
                 </div>
               ))}
-              {tareas.length === 0 && (
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                  Sin tareas asignadas aún. Agrega actividades arriba.
-                </span>
-              )}
             </div>
           </div>
 
-          {/* Notas adicionales */}
+          {/* Notas */}
           <div className="form-group" style={{ marginTop: '1rem' }}>
             <label>Notas o Requerimientos Especiales</label>
             <textarea 
@@ -258,12 +280,11 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate }) => {
             />
           </div>
 
-          {/* Botones de acción */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" disabled={!!conflictError}>
               <Sparkles size={16} />
               <span>Agendar Turno</span>
             </button>

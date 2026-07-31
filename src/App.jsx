@@ -19,14 +19,12 @@ export function App() {
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [activeTab, setActiveTab] = useState('calendar');
 
-  // Modales
   const [isNewTurnoOpen, setIsNewTurnoOpen] = useState(false);
   const [newTurnoDefaultDate, setNewTurnoDefaultDate] = useState(todayStr);
 
   const [selectedTurnoDetail, setSelectedTurnoDetail] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Modal de Confirmación de Eliminación personalizado
   const [turnoToDelete, setTurnoToDelete] = useState(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
 
@@ -34,7 +32,6 @@ export function App() {
   const [isXataConfigOpen, setIsXataConfigOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Inicializar datos
   useEffect(() => {
     const initData = async () => {
       const status = await checkXataStatus();
@@ -85,7 +82,6 @@ export function App() {
     }
   };
 
-  // Abrir modal personalizado de confirmación de eliminación
   const handleRequestDelete = (id) => {
     const target = turnos.find((t) => t.id === id);
     if (target) {
@@ -94,7 +90,6 @@ export function App() {
     }
   };
 
-  // Confirmar eliminación
   const handleConfirmDelete = async () => {
     if (!turnoToDelete) return;
     const id = turnoToDelete.id;
@@ -197,6 +192,7 @@ export function App() {
         onClose={() => setIsNewTurnoOpen(false)}
         onSave={handleCreateTurno}
         defaultDate={newTurnoDefaultDate}
+        turnosExistentes={turnos}
       />
 
       <TurnoDetailModal 
@@ -212,7 +208,6 @@ export function App() {
         xataConnected={xataConnected}
       />
 
-      {/* Modal personalizado de confirmación de eliminación */}
       <ConfirmDeleteModal 
         isOpen={isConfirmDeleteOpen}
         onClose={() => setIsConfirmDeleteOpen(false)}

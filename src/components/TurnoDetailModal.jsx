@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText } from 'lucide-react';
+import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText, CalendarPlus, ExternalLink, Bell } from 'lucide-react';
+import { downloadIcsFile, getGoogleCalendarUrl, requestNotificationPermission, sendTurnoReminderNotification } from '../utils/calendarHelper';
 
 export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
-  // Hooks siempre al inicio del componente
   const [newTaskText, setNewTaskText] = useState('');
 
-  // Retorno condicional DESPUÉS de los hooks
   if (!isOpen || !turno) return null;
 
   const handleToggleTask = (taskId) => {
@@ -37,6 +36,16 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
     onUpdateTurno({ ...turno, estado: newStatus });
   };
 
+  const handlePushReminder = async () => {
+    const granted = await requestNotificationPermission();
+    if (granted) {
+      sendTurnoReminderNotification(turno);
+      alert(`🔔 Recordatorio activado para ${turno.clienteNombre}`);
+    } else {
+      alert('Por favor habilita las notificaciones en tu navegador.');
+    }
+  };
+
   const totalTasks = turno.tareas ? turno.tareas.length : 0;
   const completedTasks = turno.tareas ? turno.tareas.filter((t) => t.completada).length : 0;
   const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -60,13 +69,13 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </button>
         </div>
 
-        {/* Info general del turno */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
+        {/* Info general */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
             <div style={{ color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <Clock size={14} /> Fecha y Hora
             </div>
-            <strong>{turno.fecha} ({turno.horaInicio} - {turno.horaFin})</strong>
+            <strong>{turno.fecha} ({turno.horaInicio} hs)</strong>
           </div>
 
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
@@ -89,10 +98,42 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </div>
         </div>
 
-        {/* Cambiar Estado del Turno */}
-        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-          <label>Cambiar Estado del Turno</label>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        {/* Exportar al Calendario del Celular / Recordatorio */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => downloadIcsFile(turno)}
+            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
+          >
+            <CalendarPlus size={14} style={{ color: 'var(--accent-cyan)' }} />
+            <span>Descargar Evento Celular (.ics)</span>
+          </button>
+
+          <a 
+            href={getGoogleCalendarUrl(turno)}
+            target="_blank" 
+            rel="noreferrer"
+            className="btn btn-secondary"
+            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', textDecoration: 'none' }}
+          >
+            <ExternalLink size={14} style={{ color: 'var(--accent-indigo)' }} />
+            <span>Abrir en Google Calendar</span>
+          </a>
+
+          <button 
+            className="btn btn-secondary" 
+            onClick={handlePushReminder}
+            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
+          >
+            <Bell size={14} style={{ color: 'var(--accent-amber)' }} />
+            <span>Recordatorio Push</span>
+          </button>
+        </div>
+
+        {/* Cambiar Estado */}
+        <div className="form-group" style={{ marginBottom: '1rem' }}>
+          <label>Estado del Turno</label>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             {['confirmado', 'pendiente', 'completado', 'cancelado'].map((st) => (
               <button
                 key={st}
@@ -101,8 +142,8 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
                 onClick={() => handleStatusChange(st)}
                 style={{ 
                   cursor: 'pointer', 
-                  padding: '0.5rem 0.85rem', 
-                  fontSize: '0.8rem',
+                  padding: '0.45rem 0.75rem', 
+                  fontSize: '0.75rem',
                   opacity: turno.estado === st ? 1 : 0.4,
                   transform: turno.estado === st ? 'scale(1.05)' : 'none',
                   transition: 'all 0.2s ease'
@@ -114,17 +155,17 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </div>
         </div>
 
-        {/* DESGLOSE Y GESTIÓN DE TAREAS A REALIZAR */}
+        {/* TAREAS A REALIZAR */}
         <div className="tasks-section" style={{ margin: 0 }}>
           <div className="tasks-header">
             <div className="tasks-title">
-              <CheckSquare size={18} />
+              <CheckSquare size={16} />
               <span>Tareas a Realizar ({completedTasks} de {totalTasks} completadas)</span>
             </div>
             <span style={{ fontWeight: 800, color: 'var(--accent-cyan)' }}>{progressPercent}%</span>
           </div>
 
-          <div className="progress-container" style={{ marginBottom: '1rem' }}>
+          <div className="progress-container" style={{ marginBottom: '0.85rem' }}>
             <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
           </div>
 
@@ -132,7 +173,7 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
             <input 
               type="text" 
               className="input-field" 
-              placeholder="Agregar nueva tarea a realizar en este turno..."
+              placeholder="Agregar nueva tarea..."
               value={newTaskText}
               onChange={(e) => setNewTaskText(e.target.value)}
             />
@@ -142,7 +183,7 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
             </button>
           </form>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.75rem', maxHeight: '200px', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.65rem', maxHeight: '180px', overflowY: 'auto' }}>
             {turno.tareas && turno.tareas.length > 0 ? (
               turno.tareas.map((t) => (
                 <div 
@@ -151,14 +192,14 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
                   onClick={() => handleToggleTask(t.id)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flex: 1 }}>
                     <input 
                       type="checkbox" 
                       className="task-checkbox"
                       checked={t.completada}
                       onChange={() => {}}
                     />
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
                       {t.descripcion}
                     </span>
                   </div>
@@ -177,23 +218,23 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
                 </div>
               ))
             ) : (
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>
-                No hay tareas asignadas para este turno. Agrega una arriba.
+              <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.85rem' }}>
+                No hay tareas asignadas para este turno.
               </div>
             )}
           </div>
         </div>
 
         {turno.notas && (
-          <div style={{ marginTop: '1.25rem', padding: '0.75rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <FileText size={14} /> Notas Adicionales
+          <div style={{ marginTop: '1rem', padding: '0.65rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <FileText size={13} /> Notas Adicionales
             </div>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{turno.notas}</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{turno.notas}</p>
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
           <button className="btn btn-primary" onClick={onClose}>
             Guardar y Cerrar
           </button>
