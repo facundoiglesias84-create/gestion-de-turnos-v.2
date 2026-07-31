@@ -21,7 +21,7 @@ export const TurnosListView = ({
   onSelectTurno, 
   onDeleteTurno, 
   onOpenNewTurno,
-  onUpdateStatus
+  onRequestStatusChange
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('proximos');
@@ -49,9 +49,9 @@ export const TurnosListView = ({
 
   const handleAdvanceStatus = (t) => {
     if (t.estado === 'nuevo' || t.estado === 'pendiente') {
-      onUpdateStatus(t.id, 'confirmado');
+      onRequestStatusChange(t, 'confirmado');
     } else if (t.estado === 'confirmado') {
-      onUpdateStatus(t.id, 'finalizado');
+      onRequestStatusChange(t, 'finalizado');
     }
   };
 
@@ -176,7 +176,7 @@ export const TurnosListView = ({
                   </div>
                 </div>
 
-                {/* Avanzar Estado */}
+                {/* Avanzar Estado con Doble Confirmación */}
                 <div style={{ marginBottom: '0.65rem' }}>
                   {t.estado === 'nuevo' || t.estado === 'pendiente' ? (
                     <button 
@@ -203,7 +203,7 @@ export const TurnosListView = ({
                   )}
                 </div>
 
-                {/* Acciones Secundarias Limpias (Sin botones de Calendario ni Recordatorio) */}
+                {/* Acciones Secundarias */}
                 <div style={{ display: 'flex', gap: '0.4rem', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid var(--border-color)' }}>
                   <button 
                     className="btn btn-secondary" 

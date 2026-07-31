@@ -9,6 +9,7 @@ import { TurnoModal } from './components/TurnoModal';
 import { TurnoDetailModal } from './components/TurnoDetailModal';
 import { XataConfigModal } from './components/XataConfigModal';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
+import { ConfirmStatusModal } from './components/ConfirmStatusModal';
 import { ReminderModal } from './components/ReminderModal';
 
 import { getStoredTurnos, saveTurnos, getStoredTareasPredefinidas, saveTareasPredefinidas } from './services/storageService';
@@ -30,6 +31,10 @@ export function App() {
 
   const [turnoToDelete, setTurnoToDelete] = useState(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+
+  // Doble confirmación para cambio de estado
+  const [pendingStatusData, setPendingStatusData] = useState(null);
+  const [isConfirmStatusOpen, setIsConfirmStatusOpen] = useState(false);
 
   const [reminderTurno, setReminderTurno] = useState(null);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
@@ -102,6 +107,19 @@ export function App() {
     if (xataConnected) {
       await syncTurnoToXata(turnoActualizado);
     }
+  };
+
+  const handleRequestStatusChange = (turno, targetStatus) => {
+    setPendingStatusData({ turno, targetStatus });
+    setIsConfirmStatusOpen(true);
+  };
+
+  const handleConfirmStatusChange = () => {
+    if (!pendingStatusData) return;
+    const { turno, targetStatus } = pendingStatusData;
+    handleUpdateTurno({ ...turno, estado: targetStatus });
+    setIsConfirmStatusOpen(false);
+    setPendingStatusData(null);
   };
 
   const handleRequestDelete = (id) => {
@@ -218,10 +236,7 @@ export function App() {
             onDeleteTurno={handleRequestDelete}
             onOpenNewTurno={handleOpenNewTurno}
             onOpenReminder={handleOpenReminder}
-            onUpdateStatus={(id, status) => {
-              const turno = turnos.find((t) => t.id === id);
-              if (turno) handleUpdateTurno({ ...turno, estado: status });
-            }}
+            onRequestStatusChange={handleRequestStatusChange}
           />
         )}
       </main>
@@ -248,6 +263,7 @@ export function App() {
         onUpdateTurno={handleUpdateTurno}
         onOpenReminder={handleOpenReminder}
         tareasPredefinidas={tareasPredefinidas}
+        onRequestStatusChange={handleRequestStatusChange}
       />
 
       <XataConfigModal 
@@ -261,6 +277,13 @@ export function App() {
         onClose={() => setIsConfirmDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
         turno={turnoToDelete}
+      />
+
+      <ConfirmStatusModal 
+        isOpen={isConfirmStatusOpen}
+        onClose={() => setIsConfirmStatusOpen(false)}
+        onConfirm={handleConfirmStatusChange}
+        pendingStatusData={pendingStatusData}
       />
 
       <ReminderModal 

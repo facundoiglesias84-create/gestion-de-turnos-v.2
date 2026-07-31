@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, CheckSquare, Plus, Trash2, Clock, Phone, FileText, DollarSign, BookOpen } from 'lucide-react';
 
-export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, tareasPredefinidas = [] }) => {
+export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, tareasPredefinidas = [], onRequestStatusChange }) => {
   const [newTaskText, setNewTaskText] = useState('');
   const [newTaskPrice, setNewTaskPrice] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
@@ -47,7 +47,11 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, tareas
   };
 
   const handleStatusChange = (newStatus) => {
-    onUpdateTurno({ ...turno, estado: newStatus });
+    if (onRequestStatusChange) {
+      onRequestStatusChange(turno, newStatus);
+    } else {
+      onUpdateTurno({ ...turno, estado: newStatus });
+    }
   };
 
   const totalTasks = turno.tareas ? turno.tareas.length : 0;
@@ -105,7 +109,7 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, tareas
           </div>
         </div>
 
-        {/* Cambiar Estado */}
+        {/* Cambiar Estado con Doble Confirmacion */}
         <div className="form-group" style={{ marginBottom: '1rem' }}>
           <label>Cambiar Estado del Turno</label>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
