@@ -75,6 +75,10 @@ export function App() {
     setTareasPredefinidas([...tareasPredefinidas, nuevaTarea]);
   };
 
+  const handleUpdateTareaPreset = (tareaActualizada) => {
+    setTareasPredefinidas(tareasPredefinidas.map((t) => (t.id === tareaActualizada.id ? tareaActualizada : t)));
+  };
+
   const handleDeleteTareaPreset = (id) => {
     setTareasPredefinidas(tareasPredefinidas.filter(t => t.id !== id));
   };
@@ -201,6 +205,7 @@ export function App() {
           <TareasPredefinidasView 
             tareasPredefinidas={tareasPredefinidas}
             onAddTareaPreset={handleAddTareaPreset}
+            onUpdateTareaPreset={handleUpdateTareaPreset}
             onDeleteTareaPreset={handleDeleteTareaPreset}
           />
         )}
