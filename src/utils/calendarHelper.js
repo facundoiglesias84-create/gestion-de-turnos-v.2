@@ -1,15 +1,33 @@
-// Helper para exportar turnos al Calendario del Celular (Google Calendar, iCal / .ics) y Notificaciones Push
+// Helper para integración con Calendario y Notificaciones
 
 /**
- * Genera y descarga un archivo .ics para agendar directamente en el calendario del celular (iOS, Android, Outlook)
+ * Abre la pantalla de creación de evento en el Calendario del dispositivo / navegador sin descargar archivos.
+ * En smartphones y computadoras abre directamente el formulario de agendamiento en el calendario.
+ */
+export const openCalendarEvent = (turno) => {
+  const [year, month, day] = turno.fecha.split('-');
+  const [hours, minutes] = (turno.horaInicio || '10:00').split(':');
+  
+  const startDateStr = `${year}${month}${day}T${hours}${minutes}00`;
+  const endHours = String((parseInt(hours, 10) + 1) % 24).padStart(2, '0');
+  const endDateStr = `${year}${month}${day}T${endHours}${minutes}00`;
+
+  const title = encodeURIComponent(`Turno: ${turno.servicio} - ${turno.clienteNombre}`);
+  const details = encodeURIComponent(`Cliente: ${turno.clienteNombre}\nTeléfono: ${turno.clienteTelefono || 'Sin registrar'}\nNotas: ${turno.notas || ''}`);
+
+  const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDateStr}/${endDateStr}&details=${details}`;
+  
+  window.open(googleCalUrl, '_blank');
+};
+
+/**
+ * Descarga de archivo .ics para iCal (iOS / Apple Calendar)
  */
 export const downloadIcsFile = (turno) => {
   const [year, month, day] = turno.fecha.split('-');
   const [hours, minutes] = (turno.horaInicio || '10:00').split(':');
 
   const startDateStr = `${year}${month}${day}T${hours}${minutes}00`;
-  
-  // Calcular hora fin (+1 hora por defecto para la entrada de calendario)
   const endHours = String((parseInt(hours, 10) + 1) % 24).padStart(2, '0');
   const endDateStr = `${year}${month}${day}T${endHours}${minutes}00`;
 
@@ -26,7 +44,7 @@ export const downloadIcsFile = (turno) => {
     `DTEND:${endDateStr}`,
     `STATUS:${turno.estado.toUpperCase()}`,
     'BEGIN:VALARM',
-    'TRIGGER:-PT30M', // Recordatorio 30 min antes
+    'TRIGGER:-PT30M',
     'ACTION:DISPLAY',
     'DESCRIPTION:Recordatorio de Turno',
     'END:VALARM',
@@ -46,24 +64,7 @@ export const downloadIcsFile = (turno) => {
 };
 
 /**
- * Genera el enlace directo para agregar a Google Calendar
- */
-export const getGoogleCalendarUrl = (turno) => {
-  const [year, month, day] = turno.fecha.split('-');
-  const [hours, minutes] = (turno.horaInicio || '10:00').split(':');
-  
-  const startDateStr = `${year}${month}${day}T${hours}${minutes}00`;
-  const endHours = String((parseInt(hours, 10) + 1) % 24).padStart(2, '0');
-  const endDateStr = `${year}${month}${day}T${endHours}${minutes}00`;
-
-  const title = encodeURIComponent(`Turno: ${turno.servicio} - ${turno.clienteNombre}`);
-  const details = encodeURIComponent(`Cliente: ${turno.clienteNombre}\nTeléfono: ${turno.clienteTelefono || 'Sin registrar'}\nNotas: ${turno.notas || ''}`);
-
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDateStr}/${endDateStr}&details=${details}`;
-};
-
-/**
- * Solicitar permiso para notificaciones Push en el navegador
+ * Solicitar permiso de notificaciones Push
  */
 export const requestNotificationPermission = async () => {
   if ('Notification' in window) {
@@ -74,12 +75,12 @@ export const requestNotificationPermission = async () => {
 };
 
 /**
- * Disparar una notificación de recordatorio
+ * Disparar notificación de recordatorio en el navegador
  */
 export const sendTurnoReminderNotification = (turno) => {
   if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(`Recordatorio de Turno: ${turno.clienteNombre}`, {
-      body: `Servicio: ${turno.servicio} a las ${turno.horaInicio} hs el ${turno.fecha}`,
+    new Notification(`🔔 Recordatorio de Turno: ${turno.clienteNombre}`, {
+      body: `Servicio: ${turno.servicio}\nHora: ${turno.horaInicio} hs (${turno.fecha})`,
       icon: '/icon.svg'
     });
   }

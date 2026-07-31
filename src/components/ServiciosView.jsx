@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Tag, Plus, Trash2, DollarSign, FileText } from 'lucide-react';
+import { Tag, Plus, Trash2, DollarSign, FileText, AlertTriangle, X } from 'lucide-react';
 
 export const ServiciosView = ({ servicios, onAddServicio, onDeleteServicio }) => {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [precioBase, setPrecioBase] = useState('');
+
+  // Estado para el modal de confirmación de borrado de servicio
+  const [servicioToDelete, setServicioToDelete] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -21,6 +24,13 @@ export const ServiciosView = ({ servicios, onAddServicio, onDeleteServicio }) =>
     setNombre('');
     setDescripcion('');
     setPrecioBase('');
+  };
+
+  const handleConfirmDelete = () => {
+    if (servicioToDelete) {
+      onDeleteServicio(servicioToDelete.id);
+      setServicioToDelete(null);
+    }
   };
 
   return (
@@ -93,7 +103,7 @@ export const ServiciosView = ({ servicios, onAddServicio, onDeleteServicio }) =>
 
             <button 
               className="btn btn-danger btn-icon" 
-              onClick={() => onDeleteServicio(s.id)}
+              onClick={() => setServicioToDelete(s)}
               title="Eliminar servicio"
               style={{ width: '38px', height: '38px' }}
             >
@@ -102,6 +112,41 @@ export const ServiciosView = ({ servicios, onAddServicio, onDeleteServicio }) =>
           </div>
         ))}
       </div>
+
+      {/* Modal de Confirmación de Eliminación de Servicio */}
+      {servicioToDelete && (
+        <div className="modal-overlay" onClick={() => setServicioToDelete(null)}>
+          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button className="close-btn" onClick={() => setServicioToDelete(null)} aria-label="Cerrar">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', marginTop: '-0.5rem' }}>
+              <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AlertTriangle size={26} />
+              </div>
+
+              <h3 style={{ fontSize: '1.15rem' }}>¿Eliminar este servicio?</h3>
+
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                ¿Estás seguro de que deseas eliminar la categoría <strong style={{ color: 'var(--text-primary)' }}>"{servicioToDelete.nombre}"</strong>?
+              </p>
+
+              <div style={{ display: 'flex', gap: '0.75rem', width: '100%', marginTop: '0.75rem' }}>
+                <button className="btn btn-secondary" onClick={() => setServicioToDelete(null)} style={{ flex: 1 }}>
+                  Cancelar
+                </button>
+                <button className="btn btn-danger" onClick={handleConfirmDelete} style={{ flex: 1 }}>
+                  <Trash2 size={15} />
+                  <span>Sí, Eliminar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

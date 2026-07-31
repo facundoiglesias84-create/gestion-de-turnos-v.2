@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText, CalendarPlus, DollarSign } from 'lucide-react';
-import { downloadIcsFile } from '../utils/calendarHelper';
+import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText, CalendarPlus, DollarSign, Bell } from 'lucide-react';
+import { openCalendarEvent, requestNotificationPermission, sendTurnoReminderNotification } from '../utils/calendarHelper';
 
 export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
   const [newTaskText, setNewTaskText] = useState('');
@@ -37,6 +37,16 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
 
   const handleStatusChange = (newStatus) => {
     onUpdateTurno({ ...turno, estado: newStatus });
+  };
+
+  const handlePushReminder = async () => {
+    const granted = await requestNotificationPermission();
+    if (granted) {
+      sendTurnoReminderNotification(turno);
+      alert(`🔔 Recordatorio activado para ${turno.clienteNombre}`);
+    } else {
+      alert('Por favor habilita las notificaciones en tu navegador.');
+    }
   };
 
   const totalTasks = turno.tareas ? turno.tareas.length : 0;
@@ -95,15 +105,24 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </div>
         </div>
 
-        {/* ÚNICO BOTÓN: "📅 Calendario" */}
+        {/* Acciones: 📅 Calendario & 🔔 Recordatorio */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
           <button 
             className="btn btn-secondary" 
-            onClick={() => downloadIcsFile(turno)}
-            style={{ width: '100%', fontSize: '0.85rem', padding: '0.55rem', gap: '0.5rem' }}
+            onClick={() => openCalendarEvent(turno)}
+            style={{ flex: 1, fontSize: '0.825rem', padding: '0.5rem', gap: '0.4rem' }}
           >
             <CalendarPlus size={16} style={{ color: 'var(--accent-cyan)' }} />
             <span>📅 Calendario</span>
+          </button>
+
+          <button 
+            className="btn btn-secondary" 
+            onClick={handlePushReminder}
+            style={{ flex: 1, fontSize: '0.825rem', padding: '0.5rem', gap: '0.4rem' }}
+          >
+            <Bell size={16} style={{ color: 'var(--accent-amber)' }} />
+            <span>🔔 Recordatorio</span>
           </button>
         </div>
 

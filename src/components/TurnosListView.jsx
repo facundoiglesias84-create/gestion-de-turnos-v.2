@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CalendarPlus, DollarSign } from 'lucide-react';
-import { downloadIcsFile } from '../utils/calendarHelper';
+import React from 'react';
+import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CalendarPlus, Bell } from 'lucide-react';
+import { openCalendarEvent, requestNotificationPermission, sendTurnoReminderNotification } from '../utils/calendarHelper';
 
 export const TurnosListView = ({ 
   turnos, 
@@ -27,6 +27,16 @@ export const TurnosListView = ({
 
     return true;
   });
+
+  const handlePushReminder = async (t) => {
+    const granted = await requestNotificationPermission();
+    if (granted) {
+      sendTurnoReminderNotification(t);
+      alert(`🔔 Recordatorio enviado/activado para ${t.clienteNombre}`);
+    } else {
+      alert('Por favor habilita las notificaciones en tu navegador.');
+    }
+  };
 
   return (
     <div style={{ marginTop: '1.25rem' }}>
@@ -152,15 +162,26 @@ export const TurnosListView = ({
                   </div>
                 </div>
 
-                {/* ÚNICO BOTÓN: "📅 Calendario" */}
-                <div style={{ marginBottom: '0.65rem' }}>
+                {/* Acciones: 📅 Calendario & 🔔 Recordatorio */}
+                <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.65rem' }}>
                   <button 
                     className="btn btn-secondary"
-                    onClick={() => downloadIcsFile(t)}
-                    style={{ width: '100%', fontSize: '0.775rem', padding: '0.4rem 0.5rem', minHeight: '34px', gap: '0.4rem' }}
+                    onClick={() => openCalendarEvent(t)}
+                    style={{ flex: 1, fontSize: '0.775rem', padding: '0.4rem 0.5rem', minHeight: '34px', gap: '0.35rem' }}
+                    title="Agendar directamente en el Calendario"
                   >
                     <CalendarPlus size={14} style={{ color: 'var(--accent-cyan)' }} />
                     <span>📅 Calendario</span>
+                  </button>
+
+                  <button 
+                    className="btn btn-secondary"
+                    onClick={() => handlePushReminder(t)}
+                    style={{ flex: 1, fontSize: '0.775rem', padding: '0.4rem 0.5rem', minHeight: '34px', gap: '0.35rem' }}
+                    title="Activar Recordatorio Notificación Push"
+                  >
+                    <Bell size={14} style={{ color: 'var(--accent-amber)' }} />
+                    <span>🔔 Recordatorio</span>
                   </button>
                 </div>
 
