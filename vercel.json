@@ -1,15 +1,8 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron-daily-whatsapp",
-      "schedule": "0 23 * * *"
-    }
-  ],
   "rewrites": [
     { "source": "/api/xata/status", "destination": "/api/xata-status.js" },
     { "source": "/api/turnos", "destination": "/api/turnos.js" },
     { "source": "/api/turnos/(.*)", "destination": "/api/turnos.js" },
-    { "source": "/api/cron/whatsapp", "destination": "/api/cron-daily-whatsapp.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
