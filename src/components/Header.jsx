@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Database, Clock, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Plus, Database, Clock } from 'lucide-react';
 
 export const Header = ({ onOpenNewTurno, onOpenXataConfig, xataConnected, activeDate }) => {
   const formattedDate = new Date(activeDate + 'T00:00:00').toLocaleDateString('es-ES', {
@@ -12,13 +12,21 @@ export const Header = ({ onOpenNewTurno, onOpenXataConfig, xataConnected, active
     <header className="app-header">
       <div className="header-content">
         <div className="logo-area">
-          <div className="logo-icon">
-            <Sparkles size={20} />
-          </div>
+          <img 
+            src="/logo.jpg" 
+            alt="Turnos Logo" 
+            style={{ 
+              width: '38px', 
+              height: '38px', 
+              borderRadius: 'var(--radius-md)',
+              objectFit: 'cover',
+              border: '1px solid var(--accent-cyan)'
+            }} 
+          />
           <div>
-            <h1 className="logo-title">TurnoFlow</h1>
+            <h1 className="logo-title">Turnos</h1>
             <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-              Gestión de Turnos & Tareas
+              Gestión & Tareas
             </div>
           </div>
         </div>
@@ -29,7 +37,6 @@ export const Header = ({ onOpenNewTurno, onOpenXataConfig, xataConnected, active
         </div>
 
         <div className="header-actions">
-          {/* Badge de Xata visible siempre */}
           <button 
             className="btn btn-secondary" 
             onClick={onOpenXataConfig}
@@ -42,7 +49,6 @@ export const Header = ({ onOpenNewTurno, onOpenXataConfig, xataConnected, active
             </span>
           </button>
 
-          {/* Botón de Agendar visible solo en desktop para no recargar mobile */}
           <button 
             className="btn btn-primary header-actions-desktop" 
             onClick={() => onOpenNewTurno()}

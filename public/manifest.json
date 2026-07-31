@@ -1,7 +1,13 @@
 {
-  "short_name": "TurnoFlow",
-  "name": "TurnoFlow - Gestión de Turnos",
+  "short_name": "Turnos",
+  "name": "Turnos - Gestión de Turnos",
   "icons": [
+    {
+      "src": "/logo.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
     {
       "src": "/icon.svg",
       "type": "image/svg+xml",
@@ -10,8 +16,8 @@
     }
   ],
   "start_url": "/",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
   "display": "standalone",
   "orientation": "portrait"
 }

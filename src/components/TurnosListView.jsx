@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CalendarPlus, Bell } from 'lucide-react';
 import { openCalendarEvent, requestNotificationPermission, sendTurnoReminderNotification } from '../utils/calendarHelper';
 
@@ -32,7 +32,7 @@ export const TurnosListView = ({
     const granted = await requestNotificationPermission();
     if (granted) {
       sendTurnoReminderNotification(t);
-      alert(`🔔 Recordatorio enviado/activado para ${t.clienteNombre}`);
+      alert(`🔔 Recordatorio activado para ${t.clienteNombre}`);
     } else {
       alert('Por favor habilita las notificaciones en tu navegador.');
     }
