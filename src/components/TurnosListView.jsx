@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CalendarPlus, Bell, CheckCircle2, PlayCircle } from 'lucide-react';
-import { openCalendarEvent, scheduleTurnoReminder } from '../utils/calendarHelper';
+import { openCalendarEvent } from '../utils/calendarHelper';
 
 export const TurnosListView = ({ 
   turnos, 
@@ -8,7 +8,8 @@ export const TurnosListView = ({
   onSelectTurno, 
   onDeleteTurno, 
   onOpenNewTurno,
-  onUpdateStatus
+  onUpdateStatus,
+  onOpenReminder
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('proximos');
@@ -42,11 +43,6 @@ export const TurnosListView = ({
     }
   };
 
-  const handlePushReminder = (t) => {
-    scheduleTurnoReminder(t, 15);
-    alert(`Recordatorio programado para el turno de ${t.clienteNombre} a las ${t.horaInicio} hs.`);
-  };
-
   return (
     <div style={{ marginTop: '1.25rem' }}>
       <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.25rem' }}>
@@ -74,7 +70,6 @@ export const TurnosListView = ({
           </button>
         </div>
 
-        {/* Filtros de Estado Profesionales SIN EMOJIS */}
         <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.85rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
           {[
             { id: 'proximos', label: 'Próximos' },
@@ -168,7 +163,7 @@ export const TurnosListView = ({
                   </div>
                 </div>
 
-                {/* PASO A PASO PROFESIONAL DE ESTADO (SIN EMOJIS) */}
+                {/* PASO A PASO PROFESIONAL DE ESTADO */}
                 <div style={{ marginBottom: '0.65rem' }}>
                   {t.estado === 'nuevo' || t.estado === 'pendiente' ? (
                     <button 
@@ -209,9 +204,9 @@ export const TurnosListView = ({
 
                   <button 
                     className="btn btn-secondary"
-                    onClick={() => handlePushReminder(t)}
+                    onClick={() => onOpenReminder(t)}
                     style={{ flex: 1, fontSize: '0.775rem', padding: '0.4rem 0.5rem', minHeight: '34px', gap: '0.35rem' }}
-                    title="Activar Recordatorio Notificación Push"
+                    title="Configurar hora y tono del Recordatorio"
                   >
                     <Bell size={14} style={{ color: 'var(--accent-amber)' }} />
                     <span>Recordatorio</span>

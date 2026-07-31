@@ -9,6 +9,7 @@ import { TurnoModal } from './components/TurnoModal';
 import { TurnoDetailModal } from './components/TurnoDetailModal';
 import { XataConfigModal } from './components/XataConfigModal';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
+import { ReminderModal } from './components/ReminderModal';
 
 import { getStoredTurnos, saveTurnos, getStoredServicios, saveServicios } from './services/storageService';
 import { fetchTurnosFromXata, syncTurnoToXata, deleteTurnoFromXata, checkXataStatus } from './services/xataService';
@@ -19,7 +20,7 @@ export function App() {
   const [turnos, setTurnos] = useState([]);
   const [servicios, setServicios] = useState(() => getStoredServicios());
   const [selectedDate, setSelectedDate] = useState(todayStr);
-  const [activeTab, setActiveTab] = useState('calendar'); // 'calendar' | 'turnos' | 'servicios' | 'stats'
+  const [activeTab, setActiveTab] = useState('calendar');
 
   const [isNewTurnoOpen, setIsNewTurnoOpen] = useState(false);
   const [newTurnoDefaultDate, setNewTurnoDefaultDate] = useState(todayStr);
@@ -30,11 +31,14 @@ export function App() {
   const [turnoToDelete, setTurnoToDelete] = useState(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
 
+  // Modal de Recordatorio personalizado
+  const [reminderTurno, setReminderTurno] = useState(null);
+  const [isReminderOpen, setIsReminderOpen] = useState(false);
+
   const [xataConnected, setXataConnected] = useState(false);
   const [isXataConfigOpen, setIsXataConfigOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carga inicial
   useEffect(() => {
     const initData = async () => {
       const status = await checkXataStatus();
@@ -124,6 +128,11 @@ export function App() {
     }
   };
 
+  const handleOpenReminder = (turno) => {
+    setReminderTurno(turno);
+    setIsReminderOpen(true);
+  };
+
   const handleOpenNewTurno = (dateParam) => {
     setNewTurnoDefaultDate(dateParam || selectedDate || todayStr);
     setIsNewTurnoOpen(true);
@@ -137,7 +146,7 @@ export function App() {
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--accent-cyan)' }}>
-        <h2>Cargando TurnoFlow...</h2>
+        <h2>Cargando Turnos...</h2>
       </div>
     );
   }
@@ -204,6 +213,7 @@ export function App() {
             onSelectTurno={handleSelectTurno}
             onDeleteTurno={handleRequestDelete}
             onOpenNewTurno={handleOpenNewTurno}
+            onOpenReminder={handleOpenReminder}
             onUpdateStatus={(id, status) => {
               const turno = turnos.find((t) => t.id === id);
               if (turno) handleUpdateTurno({ ...turno, estado: status });
@@ -232,6 +242,7 @@ export function App() {
         onClose={() => setIsDetailOpen(false)}
         turno={selectedTurnoDetail}
         onUpdateTurno={handleUpdateTurno}
+        onOpenReminder={handleOpenReminder}
       />
 
       <XataConfigModal 
@@ -245,6 +256,12 @@ export function App() {
         onClose={() => setIsConfirmDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
         turno={turnoToDelete}
+      />
+
+      <ReminderModal 
+        isOpen={isReminderOpen}
+        onClose={() => setIsReminderOpen(false)}
+        turno={reminderTurno}
       />
     </div>
   );

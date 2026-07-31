@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { X, CheckSquare, Plus, Trash2, Clock, Phone, Mail, FileText, CalendarPlus, DollarSign, Bell } from 'lucide-react';
-import { openCalendarEvent, scheduleTurnoReminder } from '../utils/calendarHelper';
+import { openCalendarEvent } from '../utils/calendarHelper';
 
-export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
+export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, onOpenReminder }) => {
   const [newTaskText, setNewTaskText] = useState('');
   const [newTaskPrice, setNewTaskPrice] = useState('');
 
@@ -37,11 +37,6 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
 
   const handleStatusChange = (newStatus) => {
     onUpdateTurno({ ...turno, estado: newStatus });
-  };
-
-  const handlePushReminder = () => {
-    scheduleTurnoReminder(turno, 15);
-    alert(`🔔 Recordatorio activado para ${turno.clienteNombre}`);
   };
 
   const totalTasks = turno.tareas ? turno.tareas.length : 0;
@@ -104,6 +99,7 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </div>
         </div>
 
+        {/* Acciones */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
           <button 
             className="btn btn-secondary" 
@@ -116,7 +112,10 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
 
           <button 
             className="btn btn-secondary" 
-            onClick={handlePushReminder}
+            onClick={() => {
+              onClose();
+              if (onOpenReminder) onOpenReminder(turno);
+            }}
             style={{ flex: 1, fontSize: '0.825rem', padding: '0.5rem', gap: '0.4rem' }}
           >
             <Bell size={16} style={{ color: 'var(--accent-amber)' }} />
@@ -124,7 +123,7 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno }) => {
           </button>
         </div>
 
-        {/* Paso a paso de Estados sencillos */}
+        {/* Cambiar Estado */}
         <div className="form-group" style={{ marginBottom: '1rem' }}>
           <label>Cambiar Estado del Turno</label>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
