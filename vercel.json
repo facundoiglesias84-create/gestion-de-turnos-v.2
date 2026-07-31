@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/api/xata/status", "destination": "/api/xata-status.js" },
+    { "source": "/api/turnos", "destination": "/api/turnos.js" },
+    { "source": "/api/turnos/(.*)", "destination": "/api/turnos.js?id=$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
