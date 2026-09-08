@@ -111,12 +111,12 @@ export const RescheduleModal = ({ isOpen, onClose, turno, turnosExistentes = [],
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginTop: '1.25rem', width: '100%' }}>
+            <button type="button" className="btn btn-secondary" onClick={onClose} style={{ flex: 1 }}>
               Cancelar
             </button>
             
-            <button type="submit" className="btn btn-primary" disabled={!!errorDuplicado || isSaved}>
+            <button type="submit" className="btn btn-primary" disabled={!!errorDuplicado || isSaved} style={{ flex: 1 }}>
               {isSaved ? (
                 <>
                   <Check size={16} />
@@ -125,7 +125,7 @@ export const RescheduleModal = ({ isOpen, onClose, turno, turnosExistentes = [],
               ) : (
                 <>
                   <CalendarClock size={16} />
-                  <span>Guardar Nuevo Horario</span>
+                  <span>Guardar Horario</span>
                 </>
               )}
             </button>

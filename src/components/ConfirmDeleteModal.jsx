@@ -39,7 +39,7 @@ export const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, turno }) => {
           </p>
 
           <span style={{ fontSize: '0.775rem', color: '#fda4af', background: 'rgba(244, 63, 94, 0.1)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
-            Esta acción eliminará el turno también de Xata.io.
+            Esta acción no se puede deshacer.
           </span>
 
           <div style={{ display: 'flex', gap: '0.75rem', width: '100%', marginTop: '1rem' }}>

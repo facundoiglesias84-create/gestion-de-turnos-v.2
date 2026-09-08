@@ -1,46 +1,30 @@
 import React from 'react';
-import { Calendar, ListFilter, Plus, CheckSquare } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
-export const MobileNav = ({ activeTab, setActiveTab, onOpenNewTurno }) => {
+export const MobileNav = ({ onOpenNewTurno }) => {
   return (
-    <nav className="mobile-nav-three">
-      {/* 1. Calendario (Izquierda) */}
+    <div style={{ position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
       <button 
-        className={`mobile-nav-col ${activeTab === 'calendar' ? 'active' : ''}`}
-        onClick={() => setActiveTab('calendar')}
+        onClick={() => onOpenNewTurno()}
+        aria-label="Agendar Turno"
+        title="Agendar Nuevo Turno"
+        style={{
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo))',
+          color: '#ffffff',
+          border: 'none',
+          boxShadow: '0 6px 20px rgba(6, 182, 212, 0.45)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease'
+        }}
       >
-        <Calendar size={19} />
-        <span>Calendario</span>
+        <Plus size={28} />
       </button>
-
-      {/* 2. Turnos con el botón + flotante directamente ARRIBA de Turnos */}
-      <div className="mobile-nav-col center-col">
-        <button 
-          className="mobile-floating-plus"
-          onClick={() => onOpenNewTurno()}
-          aria-label="Agendar Turno"
-          title="Agendar Turno"
-        >
-          <Plus size={24} />
-        </button>
-
-        <button 
-          className={`mobile-nav-col-inner ${activeTab === 'turnos' ? 'active' : ''}`}
-          onClick={() => setActiveTab('turnos')}
-        >
-          <ListFilter size={18} />
-          <span>Turnos</span>
-        </button>
-      </div>
-
-      {/* 3. Tareas Predefinidas (Derecha) */}
-      <button 
-        className={`mobile-nav-col ${activeTab === 'tareas' ? 'active' : ''}`}
-        onClick={() => setActiveTab('tareas')}
-      >
-        <CheckSquare size={19} />
-        <span>Tareas</span>
-      </button>
-    </nav>
+    </div>
   );
 };

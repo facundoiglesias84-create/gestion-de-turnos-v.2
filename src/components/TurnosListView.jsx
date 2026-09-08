@@ -1,41 +1,60 @@
-import React, { useState } from 'react';
-import { Search, Calendar as CalendarIcon, Clock, Phone, CheckSquare, Trash2, Edit3, CheckCircle2, PlayCircle, CalendarClock } from 'lucide-react';
-
-const formatFechaCompleta = (fechaStr, horaStr) => {
-  if (!fechaStr) return horaStr ? `${horaStr} hs` : '';
-  const [year, month, day] = fechaStr.split('-').map(Number);
-  const dateObj = new Date(year, month - 1, day);
-  
-  const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
-  const nombreDia = dias[dateObj.getDay()];
-  const nombreMes = meses[dateObj.getMonth()];
-
-  return `${nombreDia} ${day} de ${nombreMes} - ${horaStr} hs`;
-};
+import React, { useState, useRef } from 'react';
+import { Search, Calendar as CalendarIcon, Clock, Phone, Trash2, Edit3, CalendarClock } from 'lucide-react';
 
 export const TurnosListView = ({ 
   turnos, 
-  selectedDate, 
+  selectedDate,
+  onSelectDate,
   onSelectTurno, 
   onDeleteTurno, 
   onOpenNewTurno,
-  onRequestStatusChange,
   onOpenReschedule
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('proximos');
+  const [timeFilter, setTimeFilter] = useState('proximos'); // 'proximos', 'pasados', 'todos'
   const [onlySelectedDate, setOnlySelectedDate] = useState(true);
+
+  const datePickerRef = useRef(null);
+
+  // Generadores de fecha (ISO YYYY-MM-DD)
+  const todayDate = new Date();
+  const todayStr = todayDate.toISOString().split('T')[0];
+
+  const yesterdayDate = new Date(todayDate);
+  yesterdayDate.setDate(todayDate.getDate() - 1);
+  const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
+
+  const tomorrowDate = new Date(todayDate);
+  tomorrowDate.setDate(todayDate.getDate() + 1);
+  const tomorrowStr = tomorrowDate.toISOString().split('T')[0];
+
+  const handleOpenDatePicker = () => {
+    if (datePickerRef.current) {
+      if (typeof datePickerRef.current.showPicker === 'function') {
+        try {
+          datePickerRef.current.showPicker();
+        } catch (e) {
+          datePickerRef.current.focus();
+          datePickerRef.current.click();
+        }
+      } else {
+        datePickerRef.current.focus();
+        datePickerRef.current.click();
+      }
+    }
+  };
+
+  const formatDisplayDate = (dateStr) => {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+  };
 
   const filteredTurnos = turnos.filter((t) => {
     if (onlySelectedDate && t.fecha !== selectedDate) return false;
     
-    if (statusFilter === 'proximos') {
-      if (t.estado === 'finalizado' || t.estado === 'cancelado') return false;
-    } else if (statusFilter !== 'todos' && t.estado !== statusFilter) {
-      return false;
-    }
+    if (timeFilter === 'proximos' && t.fecha < todayStr) return false;
+    if (timeFilter === 'pasados' && t.fecha >= todayStr) return false;
     
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase();
@@ -48,55 +67,134 @@ export const TurnosListView = ({
     return true;
   });
 
-  const handleAdvanceStatus = (t) => {
-    if (t.estado === 'nuevo' || t.estado === 'pendiente') {
-      onRequestStatusChange(t, 'confirmado');
-    } else if (t.estado === 'confirmado') {
-      onRequestStatusChange(t, 'finalizado');
+  const getTurnoBadge = (fechaStr) => {
+    if (fechaStr < todayStr) {
+      return { text: 'REALIZADO', class: 'badge-completado' };
+    } else if (fechaStr === todayStr) {
+      return { text: 'HOY', class: 'badge-confirmado' };
+    } else {
+      return { text: 'PRÓXIMO', class: 'badge-pendiente' };
     }
   };
 
   return (
-    <div style={{ marginTop: '1.25rem' }}>
-      <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div style={{ marginTop: '0.75rem' }}>
+      {/* Panel de Selección de Fecha y Filtros (Totalmente Centrado) */}
+      <div className="glass-panel" style={{ padding: '1.1rem', marginBottom: '1rem', textAlign: 'center' }}>
+        
+        {/* Selector Rápido de Fecha (Centrado) */}
+        <div style={{ marginBottom: '1.1rem' }}>
+          <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', fontWeight: 800, textAlign: 'center', marginBottom: '0.6rem' }}>
+            Fecha Seleccionada
+          </div>
           
-          <div style={{ position: 'relative', flex: '1', minWidth: '220px' }}>
-            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input 
-              type="text" 
-              className="input-field" 
-              placeholder="Buscar cliente, teléfono o servicio..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ paddingLeft: '2.3rem', fontSize: '0.85rem' }}
-            />
+          {/* Chips Ayer/Hoy/Mañana Centrados */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', alignItems: 'center', marginBottom: '0.65rem' }}>
+            <button
+              className={`date-chip ${selectedDate === yesterdayStr ? 'active' : ''}`}
+              onClick={() => { onSelectDate(yesterdayStr); setOnlySelectedDate(true); }}
+            >
+              Ayer
+            </button>
+            <button
+              className={`date-chip ${selectedDate === todayStr ? 'active' : ''}`}
+              onClick={() => { onSelectDate(todayStr); setOnlySelectedDate(true); }}
+            >
+              HOY
+            </button>
+            <button
+              className={`date-chip ${selectedDate === tomorrowStr ? 'active' : ''}`}
+              onClick={() => { onSelectDate(tomorrowStr); setOnlySelectedDate(true); }}
+            >
+              Mañana
+            </button>
           </div>
 
-          <button
-            className={`btn ${onlySelectedDate ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setOnlySelectedDate(!onlySelectedDate)}
-            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
-          >
-            <CalendarIcon size={15} />
-            <span>{onlySelectedDate ? `Turnos de ${selectedDate}` : 'Ver Todos los Turnos'}</span>
-          </button>
+          {/* Botón de Fecha Táctil Gigante (Abre Calendario al Tocar Cualquier Parte del Botón) */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', alignItems: 'center' }}>
+            <div 
+              onClick={handleOpenDatePicker}
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                gap: '0.5rem', 
+                background: 'var(--bg-input)', 
+                padding: '0.45rem 1.1rem', 
+                borderRadius: 'var(--radius-md)', 
+                border: '1px solid var(--border-color)',
+                cursor: 'pointer',
+                position: 'relative',
+                minHeight: '42px',
+                userSelect: 'none',
+                minWidth: '160px'
+              }}
+              title="Toca para elegir fecha en el calendario"
+            >
+              <CalendarIcon size={16} style={{ color: 'var(--accent-cyan)' }} />
+              
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                {formatDisplayDate(selectedDate)}
+              </span>
+
+              <input 
+                ref={datePickerRef}
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    onSelectDate(e.target.value);
+                    setOnlySelectedDate(true);
+                  }
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  opacity: 0,
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              />
+            </div>
+
+            <button
+              className={`date-chip ${!onlySelectedDate ? 'active' : ''}`}
+              onClick={() => setOnlySelectedDate(!onlySelectedDate)}
+              style={{ minHeight: '42px' }}
+            >
+              {onlySelectedDate ? 'Ver Todos' : 'Filtrando Todos'}
+            </button>
+          </div>
         </div>
 
-        {/* Filtros de Estado */}
-        <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.85rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+        {/* Buscador Centrado */}
+        <div style={{ maxWidth: '440px', margin: '0 auto 0.85rem', position: 'relative' }}>
+          <Search size={15} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input 
+            type="text" 
+            className="input-field" 
+            placeholder="Buscar por cliente, teléfono o servicio..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ paddingLeft: '2.4rem', textAlign: 'center', fontSize: '0.825rem', minHeight: '40px' }}
+          />
+        </div>
+
+        {/* Filtro Temporal Centrado */}
+        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           {[
             { id: 'proximos', label: 'Próximos' },
-            { id: 'nuevo', label: 'Nuevos' },
-            { id: 'confirmado', label: 'Confirmados' },
-            { id: 'finalizado', label: 'Finalizados' },
+            { id: 'pasados', label: 'Realizados' },
             { id: 'todos', label: 'Todos' }
           ].map((st) => (
             <button
               key={st.id}
-              className={`tab-btn ${statusFilter === st.id ? 'active' : ''}`}
-              onClick={() => setStatusFilter(st.id)}
-              style={{ fontSize: '0.825rem', padding: '0.45rem 0.85rem' }}
+              className={`tab-btn ${timeFilter === st.id ? 'active' : ''}`}
+              onClick={() => setTimeFilter(st.id)}
+              style={{ fontSize: '0.8rem', padding: '0.4rem 0.85rem' }}
             >
               {st.label}
             </button>
@@ -104,134 +202,108 @@ export const TurnosListView = ({
         </div>
       </div>
 
+      {/* Lista de Tarjetas (Centradas) */}
       {filteredTurnos.length === 0 ? (
         <div className="glass-panel" style={{ padding: '2.5rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          <CalendarIcon size={40} style={{ margin: '0 auto 0.75rem', opacity: 0.4 }} />
-          <h3>No se encontraron turnos próximos</h3>
-          <p style={{ marginTop: '0.4rem', fontSize: '0.85rem' }}>
-            {onlySelectedDate ? `No hay turnos activos para la fecha ${selectedDate}.` : 'No hay turnos que coincidan con la búsqueda.'}
+          <CalendarIcon size={36} style={{ margin: '0 auto 0.65rem', opacity: 0.3 }} />
+          <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>No hay turnos registrados</h3>
+          <p style={{ marginTop: '0.3rem', fontSize: '0.825rem' }}>
+            {onlySelectedDate ? `Sin turnos agendados para el ${selectedDate}.` : 'No hay turnos que coincidan con la búsqueda.'}
           </p>
           <button 
             className="btn btn-primary" 
             onClick={() => onOpenNewTurno(selectedDate)}
-            style={{ marginTop: '1rem', fontSize: '0.85rem' }}
+            style={{ marginTop: '1rem', fontSize: '0.825rem', padding: '0.45rem 0.9rem' }}
           >
-            Agendar un Nuevo Turno
+            + Agendar Turno
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '0.85rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '0.9rem' }}>
           {filteredTurnos.map((t) => {
-            const totalTasks = t.tareas ? t.tareas.length : 0;
-            const completedTasks = t.tareas ? t.tareas.filter(task => task.completada).length : 0;
-            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-            const totalPrecio = t.tareas ? t.tareas.reduce((acc, tk) => acc + (tk.precio || 0), 0) : 0;
-
-            const badgeClass = t.estado === 'nuevo' || t.estado === 'pendiente' 
-              ? 'badge-pendiente' 
-              : t.estado === 'confirmado' 
-              ? 'badge-confirmado' 
-              : 'badge-completado';
+            const totalPrecio = t.tareas && t.tareas.length > 0 
+              ? t.tareas.reduce((acc, tk) => acc + (tk.precio || 0), 0) 
+              : 0;
+            const badgeInfo = getTurnoBadge(t.fecha);
 
             return (
-              <div key={t.id} className="glass-panel" style={{ padding: '1.1rem', display: 'flex', flexDirection: 'column' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span className={`badge ${badgeClass}`}>
-                      {t.estado === 'nuevo' ? 'NUEVO' : t.estado.toUpperCase()}
-                    </span>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>
-                      <Clock size={13} />
-                      <span>{formatFechaCompleta(t.fecha, t.horaInicio)}</span>
-                    </div>
+              <div key={t.id} className="glass-panel turno-card" style={{ padding: '1.1rem', display: 'flex', flexDirection: 'column', textAlign: 'center' }}>
+                {/* Cabecera Tarjeta: Hora e Indicador de Fecha Centrados */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
+                    <Clock size={14} />
+                    <span>{t.horaInicio ? `${t.horaInicio} hs` : 'Sin hora'}</span>
                   </div>
 
-                  <h3 style={{ fontSize: '1.05rem', marginBottom: '0.2rem', color: 'var(--text-primary)' }}>
+                  <span className={`badge ${badgeInfo.class}`}>
+                    {badgeInfo.text}
+                  </span>
+                </div>
+
+                {/* Info Cliente Centrada */}
+                <div style={{ marginBottom: '0.75rem', textAlign: 'center' }}>
+                  <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', marginBottom: '0.2rem', textAlign: 'center' }}>
                     {t.clienteNombre}
                   </h3>
-
-                  <div style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  
+                  <div style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
                     <Phone size={13} />
                     <span>{t.clienteTelefono || 'Sin teléfono'}</span>
                   </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.03)', padding: '0.45rem 0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginBottom: '0.85rem', fontSize: '0.825rem' }}>
-                    <div><strong>Servicio:</strong> {t.servicio}</div>
-                    <div style={{ color: 'var(--accent-emerald)', fontWeight: 800 }}>${totalPrecio.toLocaleString('es-AR')}</div>
-                  </div>
-
-                  {/* Tareas */}
-                  <div className="tasks-section" style={{ margin: 0, marginBottom: '0.85rem', padding: '0.65rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem', fontSize: '0.8rem' }}>
-                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <CheckSquare size={13} style={{ color: 'var(--accent-cyan)' }} />
-                        Tareas ({completedTasks}/{totalTasks})
-                      </span>
-                      <span style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>{progress}%</span>
-                    </div>
-
-                    <div className="progress-container">
-                      <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-                    </div>
-                  </div>
                 </div>
 
-                {/* Avanzar Estado */}
-                <div style={{ marginBottom: '0.65rem' }}>
-                  {t.estado === 'nuevo' || t.estado === 'pendiente' ? (
-                    <button 
-                      className="btn btn-primary" 
-                      onClick={() => handleAdvanceStatus(t)}
-                      style={{ width: '100%', fontSize: '0.8rem', padding: '0.45rem', gap: '0.4rem' }}
-                    >
-                      <PlayCircle size={15} />
-                      <span>Confirmar Turno</span>
-                    </button>
-                  ) : t.estado === 'confirmado' ? (
-                    <button 
-                      className="btn btn-secondary" 
-                      onClick={() => handleAdvanceStatus(t)}
-                      style={{ width: '100%', fontSize: '0.8rem', padding: '0.45rem', gap: '0.4rem', border: '1px solid var(--accent-emerald)', color: '#34d399' }}
-                    >
-                      <CheckCircle2 size={15} />
-                      <span>Finalizar Turno</span>
-                    </button>
-                  ) : (
-                    <div style={{ fontSize: '0.8rem', textAlign: 'center', color: 'var(--text-muted)', padding: '0.25rem', fontWeight: 600 }}>
-                      Turno Finalizado
+                {/* Detalle Servicio y Precio Centrados */}
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justify: 'center', 
+                  gap: '0.2rem',
+                  background: 'rgba(255, 255, 255, 0.03)', 
+                  padding: '0.55rem 0.75rem', 
+                  borderRadius: 'var(--radius-md)', 
+                  border: '1px solid var(--border-color)', 
+                  marginBottom: '0.85rem', 
+                  fontSize: '0.825rem',
+                  textAlign: 'center'
+                }}>
+                  <div><strong>Tarea:</strong> {t.servicio}</div>
+                  {totalPrecio > 0 && (
+                    <div style={{ color: 'var(--accent-emerald)', fontWeight: 800, fontSize: '0.95rem' }}>
+                      ${totalPrecio.toLocaleString('es-AR')}
                     </div>
                   )}
                 </div>
 
-                {/* Acciones Secundarias con Botón de Reagendar */}
-                <div style={{ display: 'flex', gap: '0.4rem', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid var(--border-color)' }}>
+                {/* Botones de Acción Secundarios Centrados */}
+                <div style={{ display: 'flex', gap: '0.45rem', justifyContent: 'center', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid var(--border-color)' }}>
                   <button 
                     className="btn btn-secondary" 
                     onClick={() => onOpenReschedule(t)}
-                    style={{ fontSize: '0.8rem', padding: '0.4rem 0.65rem', gap: '0.35rem' }}
-                    title="Cambiar fecha u hora del turno"
+                    style={{ flex: 1, fontSize: '0.8rem', padding: '0.4rem', gap: '0.35rem', justifyContent: 'center' }}
+                    title="Reagendar turno"
                   >
-                    <CalendarClock size={15} style={{ color: 'var(--accent-cyan)' }} />
+                    <CalendarClock size={14} style={{ color: 'var(--accent-cyan)' }} />
                     <span>Reagendar</span>
                   </button>
 
                   <button 
                     className="btn btn-secondary" 
                     onClick={() => onSelectTurno(t)}
-                    style={{ flex: 1, fontSize: '0.8rem', padding: '0.4rem', gap: '0.35rem' }}
+                    style={{ flex: 1, fontSize: '0.8rem', padding: '0.4rem', gap: '0.35rem', justifyContent: 'center' }}
+                    title="Editar Turno"
                   >
                     <Edit3 size={14} />
-                    <span>Tareas</span>
+                    <span>Editar</span>
                   </button>
 
                   <button 
                     className="btn btn-danger btn-icon" 
                     onClick={() => onDeleteTurno(t.id)}
                     title="Eliminar Turno"
-                    style={{ width: '38px', height: '38px' }}
+                    style={{ width: '36px', height: '36px' }}
                   >
-                    <Trash2 size={15} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>

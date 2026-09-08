@@ -1,28 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { MobileNav } from './components/MobileNav';
-import { CalendarView } from './components/CalendarView';
 import { TurnosListView } from './components/TurnosListView';
-import { TareasPredefinidasView } from './components/TareasPredefinidasView';
 import { StatsOverview } from './components/StatsOverview';
 import { TurnoModal } from './components/TurnoModal';
 import { TurnoDetailModal } from './components/TurnoDetailModal';
 import { XataConfigModal } from './components/XataConfigModal';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
-import { ConfirmStatusModal } from './components/ConfirmStatusModal';
 import { RescheduleModal } from './components/RescheduleModal';
 import { ReminderModal } from './components/ReminderModal';
 
-import { getStoredTurnos, saveTurnos, getStoredTareasPredefinidas, saveTareasPredefinidas } from './services/storageService';
+import { getStoredTurnos, saveTurnos } from './services/storageService';
 import { fetchTurnosFromXata, syncTurnoToXata, deleteTurnoFromXata, checkXataStatus } from './services/xataService';
 
 export function App() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [turnos, setTurnos] = useState([]);
-  const [tareasPredefinidas, setTareasPredefinidas] = useState(() => getStoredTareasPredefinidas());
   const [selectedDate, setSelectedDate] = useState(todayStr);
-  const [activeTab, setActiveTab] = useState('calendar');
 
   const [isNewTurnoOpen, setIsNewTurnoOpen] = useState(false);
   const [newTurnoDefaultDate, setNewTurnoDefaultDate] = useState(todayStr);
@@ -32,10 +27,6 @@ export function App() {
 
   const [turnoToDelete, setTurnoToDelete] = useState(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
-
-  // Doble confirmación para cambio de estado
-  const [pendingStatusData, setPendingStatusData] = useState(null);
-  const [isConfirmStatusOpen, setIsConfirmStatusOpen] = useState(false);
 
   // Modal de Reagendar turno
   const [rescheduleTurno, setRescheduleTurno] = useState(null);
@@ -77,22 +68,6 @@ export function App() {
     }
   }, [turnos, isLoading]);
 
-  useEffect(() => {
-    saveTareasPredefinidas(tareasPredefinidas);
-  }, [tareasPredefinidas]);
-
-  const handleAddTareaPreset = (nuevaTarea) => {
-    setTareasPredefinidas([...tareasPredefinidas, nuevaTarea]);
-  };
-
-  const handleUpdateTareaPreset = (tareaActualizada) => {
-    setTareasPredefinidas(tareasPredefinidas.map((t) => (t.id === tareaActualizada.id ? tareaActualizada : t)));
-  };
-
-  const handleDeleteTareaPreset = (id) => {
-    setTareasPredefinidas(tareasPredefinidas.filter(t => t.id !== id));
-  };
-
   const handleCreateTurno = async (nuevoTurno) => {
     const updated = [nuevoTurno, ...turnos];
     setTurnos(updated);
@@ -112,19 +87,6 @@ export function App() {
     if (xataConnected) {
       await syncTurnoToXata(turnoActualizado);
     }
-  };
-
-  const handleRequestStatusChange = (turno, targetStatus) => {
-    setPendingStatusData({ turno, targetStatus });
-    setIsConfirmStatusOpen(true);
-  };
-
-  const handleConfirmStatusChange = () => {
-    if (!pendingStatusData) return;
-    const { turno, targetStatus } = pendingStatusData;
-    handleUpdateTurno({ ...turno, estado: targetStatus });
-    setIsConfirmStatusOpen(false);
-    setPendingStatusData(null);
   };
 
   const handleOpenReschedule = (turno) => {
@@ -196,69 +158,21 @@ export function App() {
       />
 
       <main className="main-content">
-        <StatsOverview turnos={turnos} selectedDate={selectedDate} />
+        <StatsOverview turnos={turnos} />
 
-        <div className="desktop-only" style={{ marginBottom: '1.25rem' }}>
-          <div className="nav-tabs" style={{ width: 'fit-content' }}>
-            <button 
-              className={`tab-btn ${activeTab === 'calendar' ? 'active' : ''}`}
-              onClick={() => setActiveTab('calendar')}
-            >
-              Calendario & Fecha Actual
-            </button>
-
-            <button 
-              className={`tab-btn ${activeTab === 'turnos' ? 'active' : ''}`}
-              onClick={() => setActiveTab('turnos')}
-            >
-              Lista de Turnos ({turnos.length})
-            </button>
-
-            <button 
-              className={`tab-btn ${activeTab === 'tareas' ? 'active' : ''}`}
-              onClick={() => setActiveTab('tareas')}
-            >
-              Catálogo de Tareas ({tareasPredefinidas.length})
-            </button>
-          </div>
-        </div>
-
-        {activeTab === 'calendar' && (
-          <CalendarView 
-            turnos={turnos}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            onOpenNewTurno={handleOpenNewTurno}
-            onSelectTurno={handleSelectTurno}
-          />
-        )}
-
-        {activeTab === 'tareas' && (
-          <TareasPredefinidasView 
-            tareasPredefinidas={tareasPredefinidas}
-            onAddTareaPreset={handleAddTareaPreset}
-            onUpdateTareaPreset={handleUpdateTareaPreset}
-            onDeleteTareaPreset={handleDeleteTareaPreset}
-          />
-        )}
-
-        {(activeTab === 'turnos' || activeTab === 'calendar' || activeTab === 'stats') && (
-          <TurnosListView 
-            turnos={turnos}
-            selectedDate={selectedDate}
-            onSelectTurno={handleSelectTurno}
-            onDeleteTurno={handleRequestDelete}
-            onOpenNewTurno={handleOpenNewTurno}
-            onOpenReminder={handleOpenReminder}
-            onRequestStatusChange={handleRequestStatusChange}
-            onOpenReschedule={handleOpenReschedule}
-          />
-        )}
+        <TurnosListView 
+          turnos={turnos}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          onSelectTurno={handleSelectTurno}
+          onDeleteTurno={handleRequestDelete}
+          onOpenNewTurno={handleOpenNewTurno}
+          onOpenReminder={handleOpenReminder}
+          onOpenReschedule={handleOpenReschedule}
+        />
       </main>
 
       <MobileNav 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
         onOpenNewTurno={handleOpenNewTurno}
       />
 
@@ -268,7 +182,6 @@ export function App() {
         onSave={handleCreateTurno}
         defaultDate={newTurnoDefaultDate}
         turnosExistentes={turnos}
-        tareasPredefinidas={tareasPredefinidas}
       />
 
       <TurnoDetailModal 
@@ -277,8 +190,6 @@ export function App() {
         turno={selectedTurnoDetail}
         onUpdateTurno={handleUpdateTurno}
         onOpenReminder={handleOpenReminder}
-        tareasPredefinidas={tareasPredefinidas}
-        onRequestStatusChange={handleRequestStatusChange}
         onOpenReschedule={handleOpenReschedule}
       />
 
@@ -293,13 +204,6 @@ export function App() {
         onClose={() => setIsConfirmDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
         turno={turnoToDelete}
-      />
-
-      <ConfirmStatusModal 
-        isOpen={isConfirmStatusOpen}
-        onClose={() => setIsConfirmStatusOpen(false)}
-        onConfirm={handleConfirmStatusChange}
-        pendingStatusData={pendingStatusData}
       />
 
       <RescheduleModal 

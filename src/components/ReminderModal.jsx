@@ -232,12 +232,12 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.25rem' }}>
-          <button className="btn btn-secondary" onClick={onClose}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginTop: '1.25rem', width: '100%' }}>
+          <button className="btn btn-secondary" onClick={onClose} style={{ flex: 1 }}>
             Cancelar
           </button>
           
-          <button className="btn btn-primary" onClick={handleSaveReminder} disabled={isSaved}>
+          <button className="btn btn-primary" onClick={handleSaveReminder} disabled={isSaved} style={{ flex: 1 }}>
             {isSaved ? (
               <>
                 <Check size={16} />
