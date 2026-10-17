@@ -1,36 +1,59 @@
 import React from 'react';
-import { Clock, CheckCircle2 } from 'lucide-react';
+import { CalendarCheck, Clock, CheckCircle2 } from 'lucide-react';
+import { todayAR, hourAR, weekdayOf } from '../utils/dateAR';
+
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+const getSaludo = (hora) => {
+  if (hora < 12) return 'Buen día';
+  if (hora < 20) return 'Buenas tardes';
+  return 'Buenas noches';
+};
 
 export const StatsOverview = ({ turnos }) => {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayAR();
 
-  // Turnos próximos (fecha de hoy en adelante)
+  const turnosHoy = turnos.filter((t) => t.fecha === todayStr).length;
   const turnosProximos = turnos.filter((t) => t.fecha >= todayStr).length;
-
-  // Turnos ya realizados/pasados (fecha anterior a hoy)
   const turnosPasados = turnos.filter((t) => t.fecha < todayStr).length;
 
+  const [, mes, diaMes] = todayStr.split('-').map(Number);
+  const dia = DIAS[weekdayOf(todayStr)];
+  const fechaTexto = `${dia.charAt(0).toUpperCase() + dia.slice(1)} ${diaMes} de ${MESES[mes - 1]}`;
+
   return (
-    <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.85rem' }}>
-      <div className="glass-panel stat-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0.85rem' }}>
-        <div className="stat-icon" style={{ background: 'rgba(6, 182, 212, 0.15)', color: 'var(--accent-cyan)', marginBottom: '0.35rem' }}>
-          <Clock size={20} />
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div className="stat-value" style={{ color: 'var(--accent-cyan)', fontSize: '1.25rem', fontWeight: 800 }}>{turnosProximos}</div>
-          <div className="stat-label" style={{ fontSize: '0.75rem' }}>Turnos Próximos</div>
-        </div>
+    <>
+      <div className="greeting">
+        <h2>{getSaludo(hourAR())}</h2>
+        <p>{fechaTexto}</p>
       </div>
 
-      <div className="glass-panel stat-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0.85rem' }}>
-        <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', marginBottom: '0.35rem' }}>
-          <CheckCircle2 size={20} />
+      <div className="stats-grid">
+        <div className="stat-card lavender">
+          <div className="stat-icon" style={{ color: 'var(--primary)' }}>
+            <CalendarCheck size={20} aria-hidden="true" />
+          </div>
+          <div className="stat-value">{turnosHoy}</div>
+          <div className="stat-label">Hoy</div>
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <div className="stat-value" style={{ color: '#34d399', fontSize: '1.25rem', fontWeight: 800 }}>{turnosPasados}</div>
-          <div className="stat-label" style={{ fontSize: '0.75rem' }}>Turnos Realizados</div>
+
+        <div className="stat-card peach">
+          <div className="stat-icon" style={{ color: 'var(--warning-text)' }}>
+            <Clock size={20} aria-hidden="true" />
+          </div>
+          <div className="stat-value">{turnosProximos}</div>
+          <div className="stat-label">Próximos</div>
+        </div>
+
+        <div className="stat-card mint">
+          <div className="stat-icon" style={{ color: 'var(--success-text)' }}>
+            <CheckCircle2 size={20} aria-hidden="true" />
+          </div>
+          <div className="stat-value">{turnosPasados}</div>
+          <div className="stat-label">Realizados</div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, Phone, CalendarClock, Edit3, Check } from 'lucide-react';
+import { todayAR } from '../utils/dateAR';
 
 export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, onOpenReschedule }) => {
   const [clienteNombre, setClienteNombre] = useState('');
@@ -24,7 +25,7 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, onOpen
 
   if (!isOpen || !turno) return null;
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayAR();
   const isPast = turno.fecha < todayStr;
   const isToday = turno.fecha === todayStr;
 
@@ -65,7 +66,7 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, onOpen
 
         <form onSubmit={handleSave}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.85rem' }}>
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.65rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+            <div style={{ background: 'var(--bg-soft)', padding: '0.65rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <Clock size={13} /> Fecha y Hora
               </div>
@@ -81,7 +82,7 @@ export const TurnoDetailModal = ({ turno, isOpen, onClose, onUpdateTurno, onOpen
               }}
               style={{ fontSize: '0.8rem', gap: '0.35rem', height: '100%', justifyContent: 'center' }}
             >
-              <CalendarClock size={15} style={{ color: 'var(--accent-cyan)' }} />
+              <CalendarClock size={15} style={{ color: 'var(--primary)' }} />
               <span>Reagendar</span>
             </button>
           </div>

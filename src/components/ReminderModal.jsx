@@ -158,7 +158,7 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
           </button>
 
           {optionType === 'custom' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.75rem', padding: '0.75rem', background: 'var(--bg-soft)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <div>
                 <label style={{ fontSize: '0.75rem' }}>Fecha del aviso</label>
                 <input 
@@ -203,12 +203,12 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
                   alignItems: 'center', 
                   justifyContent: 'space-between',
                   cursor: 'pointer',
-                  borderColor: ringtone === rt.id ? 'var(--accent-cyan)' : 'var(--border-color)',
-                  background: ringtone === rt.id ? 'rgba(6, 182, 212, 0.12)' : 'rgba(255, 255, 255, 0.02)'
+                  borderColor: ringtone === rt.id ? 'var(--primary)' : 'var(--border-color)',
+                  background: ringtone === rt.id ? 'var(--primary-soft)' : 'var(--bg-soft)'
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '0.825rem', fontWeight: 700, color: ringtone === rt.id ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>
+                  <div style={{ fontSize: '0.825rem', fontWeight: 700, color: ringtone === rt.id ? 'var(--primary)' : 'var(--text-primary)' }}>
                     {rt.label}
                   </div>
                   <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>{rt.desc}</div>
@@ -225,7 +225,7 @@ export const ReminderModal = ({ isOpen, onClose, turno }) => {
                   }}
                   title="Escuchar Tono"
                 >
-                  <Volume2 size={15} style={{ color: 'var(--accent-cyan)' }} />
+                  <Volume2 size={15} style={{ color: 'var(--primary)' }} />
                 </button>
               </div>
             ))}

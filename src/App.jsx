@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
-import { MobileNav } from './components/MobileNav';
 import { TurnosListView } from './components/TurnosListView';
 import { StatsOverview } from './components/StatsOverview';
 import { TurnoModal } from './components/TurnoModal';
@@ -9,12 +8,14 @@ import { XataConfigModal } from './components/XataConfigModal';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
 import { RescheduleModal } from './components/RescheduleModal';
 import { ReminderModal } from './components/ReminderModal';
+import { LoadingSkeleton } from './components/LoadingSkeleton';
 
 import { getStoredTurnos, saveTurnos } from './services/storageService';
 import { fetchTurnosFromXata, syncTurnoToXata, deleteTurnoFromXata, checkXataStatus } from './services/xataService';
+import { todayAR } from './utils/dateAR';
 
 export function App() {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayAR();
 
   const [turnos, setTurnos] = useState([]);
   const [selectedDate, setSelectedDate] = useState(todayStr);
@@ -141,11 +142,7 @@ export function App() {
   };
 
   if (isLoading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--accent-cyan)' }}>
-        <h2>Cargando Turnos...</h2>
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   return (
@@ -172,9 +169,6 @@ export function App() {
         />
       </main>
 
-      <MobileNav 
-        onOpenNewTurno={handleOpenNewTurno}
-      />
 
       <TurnoModal 
         isOpen={isNewTurnoOpen}

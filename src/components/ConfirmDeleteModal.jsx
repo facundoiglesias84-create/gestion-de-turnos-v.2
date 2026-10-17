@@ -19,12 +19,12 @@ export const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, turno }) => {
               width: '56px', 
               height: '56px', 
               borderRadius: '50%', 
-              background: 'rgba(244, 63, 94, 0.15)', 
-              color: '#f43f5e', 
+              background: 'var(--danger-soft)', 
+              color: 'var(--danger-text)', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
-              border: '1px solid rgba(244, 63, 94, 0.3)'
+              border: '1px solid var(--danger-border)'
             }}
           >
             <AlertTriangle size={28} />
@@ -38,7 +38,7 @@ export const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, turno }) => {
             Estás a punto de borrar el turno de <strong style={{ color: 'var(--text-primary)' }}>{turno.clienteNombre}</strong> ({turno.servicio}) programado para el <strong style={{ color: 'var(--text-primary)' }}>{turno.fecha}</strong>.
           </p>
 
-          <span style={{ fontSize: '0.775rem', color: '#fda4af', background: 'rgba(244, 63, 94, 0.1)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
+          <span style={{ fontSize: '0.775rem', color: 'var(--danger-text)', background: 'var(--danger-soft)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--danger-border)' }}>
             Esta acción no se puede deshacer.
           </span>
 

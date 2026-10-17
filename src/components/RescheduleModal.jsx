@@ -34,7 +34,7 @@ export const RescheduleModal = ({ isOpen, onClose, turno, turnosExistentes = [],
     });
 
     if (existe) {
-      setErrorDuplicado(`⚠️ Ya existe un turno agendado para la fecha ${dateToCheck} a las ${timeToCheck} hs.`);
+      setErrorDuplicado(`Ya existe un turno agendado para la fecha ${dateToCheck} a las ${timeToCheck} hs.`);
     } else {
       setErrorDuplicado('');
     }
@@ -65,7 +65,7 @@ export const RescheduleModal = ({ isOpen, onClose, turno, turnosExistentes = [],
       <div className="modal-content" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title" style={{ fontSize: '1.15rem' }}>
-            <CalendarClock size={22} style={{ color: 'var(--accent-cyan)' }} />
+            <CalendarClock size={22} style={{ color: 'var(--primary)' }} />
             <span>Reagendar Turno</span>
           </div>
           <button className="close-btn" onClick={onClose} aria-label="Cerrar modal">
@@ -73,7 +73,7 @@ export const RescheduleModal = ({ isOpen, onClose, turno, turnosExistentes = [],
           </button>
         </div>
 
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
+        <div style={{ background: 'var(--bg-soft)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
           <div style={{ color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Cliente</div>
           <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>{turno.clienteNombre}</strong>
           <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.3rem' }}>
@@ -82,7 +82,7 @@ export const RescheduleModal = ({ isOpen, onClose, turno, turnosExistentes = [],
         </div>
 
         {errorDuplicado && (
-          <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', color: '#fda4af', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ background: 'var(--danger-soft)', border: '1px solid var(--danger-border)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', color: 'var(--danger-text)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <AlertTriangle size={18} style={{ flexShrink: 0 }} />
             <span>{errorDuplicado}</span>
           </div>

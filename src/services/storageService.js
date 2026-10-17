@@ -1,14 +1,9 @@
+import { todayAR } from '../utils/dateAR';
 const STORAGE_KEY = 'turnoflow_turnos_v1';
 const PRESET_TASKS_KEY = 'turnoflow_preset_tasks_v2';
 const INITIALIZED_KEY = 'turnoflow_preset_initialized_v2';
 
-const getTodayFormatted = () => {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+const getTodayFormatted = () => todayAR();
 
 export const DEFAULT_TAREAS_PREDEFINIDAS = [
   { id: 'tp-1', descripcion: 'Diagnóstico por computadora (ODB2)', precio: 5000 },

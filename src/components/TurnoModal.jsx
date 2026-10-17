@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, Plus, AlertTriangle } from 'lucide-react';
+import { X, Calendar, Clock, Plus, AlertTriangle, User, Phone, Wrench, DollarSign, StickyNote } from 'lucide-react';
+import { IconField } from './IconField';
+import { todayAR } from '../utils/dateAR';
 
 export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExistentes = [] }) => {
   const [clienteNombre, setClienteNombre] = useState('');
   const [clienteTelefono, setClienteTelefono] = useState('');
-  const [fecha, setFecha] = useState(defaultDate || new Date().toISOString().split('T')[0]);
+  const [fecha, setFecha] = useState(defaultDate || todayAR());
   const [horaInicio, setHoraInicio] = useState('09:00');
   const [servicio, setServicio] = useState('');
   const [precio, setPrecio] = useState('');
@@ -28,7 +30,7 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
     const existe = turnosExistentes.some((t) => t.fecha === dateToCheck && t.horaInicio === timeToCheck);
 
     if (existe) {
-      setErrorDuplicado(`⚠️ Ya existe un turno agendado para la fecha ${dateToCheck} a las ${timeToCheck} hs.`);
+      setErrorDuplicado(`Ya existe un turno agendado para la fecha ${dateToCheck} a las ${timeToCheck} hs.`);
     } else {
       setErrorDuplicado('');
     }
@@ -83,7 +85,7 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
         </div>
 
         {errorDuplicado && (
-          <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', color: '#fda4af', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ background: 'var(--danger-soft)', border: '1px solid var(--danger-border)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', color: 'var(--danger-text)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <AlertTriangle size={18} style={{ flexShrink: 0 }} />
             <span>{errorDuplicado}</span>
           </div>
@@ -93,87 +95,93 @@ export const TurnoModal = ({ isOpen, onClose, onSave, defaultDate, turnosExisten
           {/* CLIENTE Y TELÉFONO */}
           <div className="form-group">
             <label>Nombre y Apellido del Cliente *</label>
-            <input 
-              type="text" 
-              className="input-field" 
-              placeholder="Ej: Juan Pérez"
-              value={clienteNombre}
-              onChange={(e) => setClienteNombre(e.target.value)}
-              required 
-            />
+            <IconField icon={User}>
+              <input
+                type="text"
+                placeholder="Ej: Juan Pérez"
+                value={clienteNombre}
+                onChange={(e) => setClienteNombre(e.target.value)}
+                required
+              />
+            </IconField>
           </div>
 
           <div className="form-group">
             <label>Teléfono (Opcional)</label>
-            <input 
-              type="tel" 
-              className="input-field" 
-              placeholder="Ej: 1133529147"
-              value={clienteTelefono}
-              onChange={(e) => setClienteTelefono(e.target.value)}
-            />
+            <IconField icon={Phone}>
+              <input
+                type="tel"
+                placeholder="Ej: 1133529147"
+                value={clienteTelefono}
+                onChange={(e) => setClienteTelefono(e.target.value)}
+              />
+            </IconField>
           </div>
 
           {/* FECHA Y HORA */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div className="form-row-2">
             <div className="form-group">
               <label>Fecha del Turno *</label>
-              <input 
-                type="date" 
-                className="input-field" 
-                value={fecha}
-                onChange={(e) => setFecha(e.target.value)}
-                required 
-              />
+              <IconField icon={Calendar}>
+                <input
+                  type="date"
+                  value={fecha}
+                  onChange={(e) => setFecha(e.target.value)}
+                  required
+                />
+              </IconField>
             </div>
 
             <div className="form-group">
               <label>Hora de Inicio *</label>
-              <input 
-                type="time" 
-                className="input-field" 
-                value={horaInicio}
-                onChange={(e) => setHoraInicio(e.target.value)}
-                required 
-              />
+              <IconField icon={Clock}>
+                <input
+                  type="time"
+                  value={horaInicio}
+                  onChange={(e) => setHoraInicio(e.target.value)}
+                  required
+                />
+              </IconField>
             </div>
           </div>
 
           {/* TAREA / SERVICIO A REALIZAR */}
           <div className="form-group">
             <label>Tarea / Servicio a Realizar *</label>
-            <input 
-              type="text" 
-              className="input-field" 
-              placeholder="Ej: Cambio de aceite, Corte y barba..."
-              value={servicio}
-              onChange={(e) => setServicio(e.target.value)}
-              required
-            />
+            <IconField icon={Wrench}>
+              <input
+                type="text"
+                placeholder="Ej: Cambio de aceite, Corte y barba..."
+                value={servicio}
+                onChange={(e) => setServicio(e.target.value)}
+                required
+              />
+            </IconField>
           </div>
 
           {/* PRECIO (OPCIONAL) */}
           <div className="form-group">
             <label>Monto a Cobrar ($) (Opcional)</label>
-            <input 
-              type="number" 
-              className="input-field" 
-              placeholder="Ej: 25000 (dejar en blanco si no aplica)"
-              value={precio}
-              onChange={(e) => setPrecio(e.target.value)}
-            />
+            <IconField icon={DollarSign}>
+              <input
+                type="number"
+                placeholder="Ej: 25000"
+                value={precio}
+                onChange={(e) => setPrecio(e.target.value)}
+              />
+            </IconField>
           </div>
 
           {/* NOTAS */}
           <div className="form-group">
             <label>Notas o Detalle Adicional (Opcional)</label>
-            <textarea 
-              className="textarea-field" 
-              placeholder="Detalles sobre el turno..."
-              value={notas}
-              onChange={(e) => setNotas(e.target.value)}
-              style={{ minHeight: '60px' }}
-            ></textarea>
+            <IconField icon={StickyNote} multiline>
+              <textarea
+                placeholder="Detalles sobre el turno..."
+                value={notas}
+                onChange={(e) => setNotas(e.target.value)}
+              ></textarea>
+            </IconField>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginTop: '1.25rem', width: '100%' }}>

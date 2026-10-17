@@ -38,7 +38,7 @@ export const XataConfigModal = ({ isOpen, onClose, xataConnected }) => {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title">
-            <Database style={{ color: 'var(--accent-cyan)' }} size={22} />
+            <Database style={{ color: 'var(--primary)' }} size={22} />
             <h2>Conexión Base de Datos Xata.io</h2>
           </div>
           <button className="close-btn" onClick={onClose} aria-label="Cerrar modal">
@@ -55,17 +55,17 @@ export const XataConfigModal = ({ isOpen, onClose, xataConnected }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '0.75rem',
-              background: statusInfo.connected ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-              border: `1px solid ${statusInfo.connected ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
+              background: statusInfo.connected ? 'var(--success-soft)' : 'var(--warning-soft)',
+              border: `1px solid ${statusInfo.connected ? 'var(--success-border)' : 'var(--warning-border)'}`
             }}
           >
             {statusInfo.connected ? (
-              <CheckCircle2 size={24} style={{ color: '#34d399', flexShrink: 0 }} />
+              <CheckCircle2 size={24} style={{ color: 'var(--success-text)', flexShrink: 0 }} />
             ) : (
-              <AlertCircle size={24} style={{ color: '#fbbf24', flexShrink: 0 }} />
+              <AlertCircle size={24} style={{ color: 'var(--warning-text)', flexShrink: 0 }} />
             )}
             <div>
-              <h4 style={{ color: statusInfo.connected ? '#34d399' : '#fbbf24', fontSize: '1rem', marginBottom: '0.15rem' }}>
+              <h4 style={{ color: statusInfo.connected ? 'var(--success-text)' : 'var(--warning-text)', fontSize: '1rem', marginBottom: '0.15rem' }}>
                 {statusInfo.connected ? 'Conectado a Xata.io (PostgreSQL)' : 'Modo Almacenamiento Local'}
               </h4>
               <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
@@ -76,8 +76,8 @@ export const XataConfigModal = ({ isOpen, onClose, xataConnected }) => {
             </div>
           </div>
 
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-cyan)', fontWeight: 700, marginBottom: '0.5rem' }}>
+          <div style={{ background: 'var(--bg-soft)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontWeight: 700, marginBottom: '0.5rem' }}>
               <Server size={16} /> Detalles de la Configuración Activa
             </div>
             

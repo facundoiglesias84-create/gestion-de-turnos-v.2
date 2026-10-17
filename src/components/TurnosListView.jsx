@@ -1,12 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { Search, Calendar as CalendarIcon, Clock, Phone, Trash2, Edit3, CalendarClock } from 'lucide-react';
+import { Search, Calendar as CalendarIcon, Phone, Trash2, Edit3, CalendarClock, Plus, CheckCircle2, ListChecks, SlidersHorizontal } from 'lucide-react';
+import { IconField } from './IconField';
+import { todayAR, addDays, weekdayOf } from '../utils/dateAR';
 
-export const TurnosListView = ({ 
-  turnos, 
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+export const TurnosListView = ({
+  turnos,
   selectedDate,
   onSelectDate,
-  onSelectTurno, 
-  onDeleteTurno, 
+  onSelectTurno,
+  onDeleteTurno,
   onOpenNewTurno,
   onOpenReschedule
 }) => {
@@ -17,16 +22,9 @@ export const TurnosListView = ({
   const datePickerRef = useRef(null);
 
   // Generadores de fecha (ISO YYYY-MM-DD)
-  const todayDate = new Date();
-  const todayStr = todayDate.toISOString().split('T')[0];
-
-  const yesterdayDate = new Date(todayDate);
-  yesterdayDate.setDate(todayDate.getDate() - 1);
-  const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
-
-  const tomorrowDate = new Date(todayDate);
-  tomorrowDate.setDate(todayDate.getDate() + 1);
-  const tomorrowStr = tomorrowDate.toISOString().split('T')[0];
+  const todayStr = todayAR();
+  const yesterdayStr = addDays(todayStr, -1);
+  const tomorrowStr = addDays(todayStr, 1);
 
   const handleOpenDatePicker = () => {
     if (datePickerRef.current) {
@@ -50,12 +48,30 @@ export const TurnosListView = ({
     return `${d}/${m}/${y}`;
   };
 
+  const formatLongDate = (dateStr) => {
+    if (!dateStr) return '';
+    const [, m, d] = dateStr.split('-').map(Number);
+    return `${DIAS[weekdayOf(dateStr)]} ${d} de ${MESES[m - 1]}`;
+  };
+
+  const getDateLabel = (dateStr) => {
+    if (dateStr === todayStr) return 'Hoy';
+    if (dateStr === tomorrowStr) return 'Mañana';
+    if (dateStr === yesterdayStr) return 'Ayer';
+    return formatLongDate(dateStr);
+  };
+
+  const selectDate = (dateStr) => {
+    onSelectDate(dateStr);
+    setOnlySelectedDate(true);
+  };
+
   const filteredTurnos = turnos.filter((t) => {
     if (onlySelectedDate && t.fecha !== selectedDate) return false;
-    
+
     if (timeFilter === 'proximos' && t.fecha < todayStr) return false;
     if (timeFilter === 'pasados' && t.fecha >= todayStr) return false;
-    
+
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase();
       const nameMatch = t.clienteNombre?.toLowerCase().includes(q);
@@ -69,241 +85,209 @@ export const TurnosListView = ({
 
   const getTurnoBadge = (fechaStr) => {
     if (fechaStr < todayStr) {
-      return { text: 'REALIZADO', class: 'badge-completado' };
+      return { text: 'Realizado', class: 'badge-completado' };
     } else if (fechaStr === todayStr) {
-      return { text: 'HOY', class: 'badge-confirmado' };
+      return { text: 'Hoy', class: 'badge-confirmado' };
     } else {
-      return { text: 'PRÓXIMO', class: 'badge-pendiente' };
+      return { text: 'Próximo', class: 'badge-pendiente' };
     }
   };
 
+  const hasActiveFilters = !onlySelectedDate || selectedDate !== todayStr || searchQuery.trim() !== '';
+
+  const clearFilters = () => {
+    onSelectDate(todayStr);
+    setOnlySelectedDate(true);
+    setSearchQuery('');
+  };
+
+  const listTitle = onlySelectedDate ? getDateLabel(selectedDate) : 'Todas las fechas';
+
   return (
-    <div style={{ marginTop: '0.75rem' }}>
-      {/* Panel de Selección de Fecha y Filtros (Totalmente Centrado) */}
-      <div className="glass-panel" style={{ padding: '1.1rem', marginBottom: '1rem', textAlign: 'center' }}>
-        
-        {/* Selector Rápido de Fecha (Centrado) */}
-        <div style={{ marginBottom: '1.1rem' }}>
-          <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', fontWeight: 800, textAlign: 'center', marginBottom: '0.6rem' }}>
-            Fecha Seleccionada
-          </div>
-          
-          {/* Chips Ayer/Hoy/Mañana Centrados */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', alignItems: 'center', marginBottom: '0.65rem' }}>
-            <button
-              className={`date-chip ${selectedDate === yesterdayStr ? 'active' : ''}`}
-              onClick={() => { onSelectDate(yesterdayStr); setOnlySelectedDate(true); }}
-            >
-              Ayer
-            </button>
-            <button
-              className={`date-chip ${selectedDate === todayStr ? 'active' : ''}`}
-              onClick={() => { onSelectDate(todayStr); setOnlySelectedDate(true); }}
-            >
-              HOY
-            </button>
-            <button
-              className={`date-chip ${selectedDate === tomorrowStr ? 'active' : ''}`}
-              onClick={() => { onSelectDate(tomorrowStr); setOnlySelectedDate(true); }}
-            >
-              Mañana
-            </button>
-          </div>
-
-          {/* Botón de Fecha Táctil Gigante (Abre Calendario al Tocar Cualquier Parte del Botón) */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', alignItems: 'center' }}>
-            <div 
-              onClick={handleOpenDatePicker}
-              style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                gap: '0.5rem', 
-                background: 'var(--bg-input)', 
-                padding: '0.45rem 1.1rem', 
-                borderRadius: 'var(--radius-md)', 
-                border: '1px solid var(--border-color)',
-                cursor: 'pointer',
-                position: 'relative',
-                minHeight: '42px',
-                userSelect: 'none',
-                minWidth: '160px'
-              }}
-              title="Toca para elegir fecha en el calendario"
-            >
-              <CalendarIcon size={16} style={{ color: 'var(--accent-cyan)' }} />
-              
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                {formatDisplayDate(selectedDate)}
-              </span>
-
-              <input 
-                ref={datePickerRef}
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    onSelectDate(e.target.value);
-                    setOnlySelectedDate(true);
-                  }
-                }}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  opacity: 0,
-                  cursor: 'pointer',
-                  fontSize: '16px'
-                }}
-              />
-            </div>
-
-            <button
-              className={`date-chip ${!onlySelectedDate ? 'active' : ''}`}
-              onClick={() => setOnlySelectedDate(!onlySelectedDate)}
-              style={{ minHeight: '42px' }}
-            >
-              {onlySelectedDate ? 'Ver Todos' : 'Filtrando Todos'}
-            </button>
-          </div>
-        </div>
-
-        {/* Buscador Centrado */}
-        <div style={{ maxWidth: '440px', margin: '0 auto 0.85rem', position: 'relative' }}>
-          <Search size={15} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-          <input 
-            type="text" 
-            className="input-field" 
-            placeholder="Buscar por cliente, teléfono o servicio..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ paddingLeft: '2.4rem', textAlign: 'center', fontSize: '0.825rem', minHeight: '40px' }}
-          />
-        </div>
-
-        {/* Filtro Temporal Centrado */}
-        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+    <div>
+      {/* Barra principal: Próximos / Realizados / Todos */}
+      <div className="glass-nav-wrap">
+        <div className="glass-nav" role="tablist" aria-label="Filtrar por momento">
           {[
-            { id: 'proximos', label: 'Próximos' },
-            { id: 'pasados', label: 'Realizados' },
-            { id: 'todos', label: 'Todos' }
-          ].map((st) => (
+            { id: 'proximos', label: 'Próximos', Icon: CalendarClock },
+            { id: 'pasados', label: 'Realizados', Icon: CheckCircle2 },
+            { id: 'todos', label: 'Todos', Icon: ListChecks }
+          ].map(({ id, label, Icon }) => (
             <button
-              key={st.id}
-              className={`tab-btn ${timeFilter === st.id ? 'active' : ''}`}
-              onClick={() => setTimeFilter(st.id)}
-              style={{ fontSize: '0.8rem', padding: '0.4rem 0.85rem' }}
+              key={id}
+              role="tab"
+              aria-selected={timeFilter === id}
+              className={`tab-btn ${timeFilter === id ? 'active' : ''}`}
+              onClick={() => setTimeFilter(id)}
             >
-              {st.label}
+              <Icon size={18} aria-hidden="true" />
+              <span>{label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Lista de Tarjetas (Centradas) */}
+      {/* Filtros */}
+      <section className="glass-panel filters-panel" aria-labelledby="filtros-titulo">
+        <div className="filters-header">
+          <h2 className="filters-title" id="filtros-titulo">
+            <SlidersHorizontal size={18} aria-hidden="true" />
+            Filtros
+          </h2>
+          {hasActiveFilters && (
+            <button className="filters-clear" onClick={clearFilters}>
+              Limpiar
+            </button>
+          )}
+        </div>
+
+        <div className="filters-body">
+          <div className="filter-group">
+            <span className="section-label">Día</span>
+            <div className="chip-row">
+              <button
+                className={`date-chip ${onlySelectedDate && selectedDate === yesterdayStr ? 'active' : ''}`}
+                onClick={() => selectDate(yesterdayStr)}
+              >
+                Ayer
+              </button>
+              <button
+                className={`date-chip ${onlySelectedDate && selectedDate === todayStr ? 'active' : ''}`}
+                onClick={() => selectDate(todayStr)}
+              >
+                Hoy
+              </button>
+              <button
+                className={`date-chip ${onlySelectedDate && selectedDate === tomorrowStr ? 'active' : ''}`}
+                onClick={() => selectDate(tomorrowStr)}
+              >
+                Mañana
+              </button>
+
+              <label className="date-picker-btn" onClick={handleOpenDatePicker} title="Elegir otra fecha">
+                <CalendarIcon size={18} style={{ color: 'var(--primary)' }} aria-hidden="true" />
+                <span>{formatDisplayDate(selectedDate)}</span>
+                <input
+                  ref={datePickerRef}
+                  type="date"
+                  aria-label="Elegir fecha"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    if (e.target.value) selectDate(e.target.value);
+                  }}
+                />
+              </label>
+
+              <button
+                className={`date-chip ${!onlySelectedDate ? 'active' : ''}`}
+                onClick={() => setOnlySelectedDate(!onlySelectedDate)}
+              >
+                Todas
+              </button>
+            </div>
+          </div>
+
+          <div className="filter-group">
+            <label className="section-label" htmlFor="buscar-turnos">Buscar</label>
+            <IconField icon={Search}>
+              <input
+                id="buscar-turnos"
+                type="search"
+                placeholder="Cliente o servicio"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </IconField>
+          </div>
+        </div>
+      </section>
+
+      <div className="list-heading">
+        <h3>{listTitle}</h3>
+        <span className="list-count">{filteredTurnos.length} {filteredTurnos.length === 1 ? 'turno' : 'turnos'}</span>
+      </div>
+
       {filteredTurnos.length === 0 ? (
-        <div className="glass-panel" style={{ padding: '2.5rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          <CalendarIcon size={36} style={{ margin: '0 auto 0.65rem', opacity: 0.3 }} />
-          <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>No hay turnos registrados</h3>
-          <p style={{ marginTop: '0.3rem', fontSize: '0.825rem' }}>
-            {onlySelectedDate ? `Sin turnos agendados para el ${selectedDate}.` : 'No hay turnos que coincidan con la búsqueda.'}
+        <div className="glass-panel empty-state">
+          <div className="empty-icon">
+            <CalendarIcon size={28} aria-hidden="true" />
+          </div>
+          <h3>No hay turnos acá</h3>
+          <p>
+            {onlySelectedDate
+              ? `No tenés turnos para ${getDateLabel(selectedDate).toLowerCase()}.`
+              : 'Ningún turno coincide con la búsqueda.'}
           </p>
-          <button 
-            className="btn btn-primary" 
+          <button
+            className="btn btn-primary"
             onClick={() => onOpenNewTurno(selectedDate)}
-            style={{ marginTop: '1rem', fontSize: '0.825rem', padding: '0.45rem 0.9rem' }}
+            style={{ marginTop: '1.1rem' }}
           >
-            + Agendar Turno
+            <Plus size={18} aria-hidden="true" />
+            Agendar turno
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '0.9rem' }}>
+        <div className="turnos-grid">
           {filteredTurnos.map((t) => {
-            const totalPrecio = t.tareas && t.tareas.length > 0 
-              ? t.tareas.reduce((acc, tk) => acc + (tk.precio || 0), 0) 
+            const totalPrecio = t.tareas && t.tareas.length > 0
+              ? t.tareas.reduce((acc, tk) => acc + (tk.precio || 0), 0)
               : 0;
             const badgeInfo = getTurnoBadge(t.fecha);
 
             return (
-              <div key={t.id} className="glass-panel turno-card" style={{ padding: '1.1rem', display: 'flex', flexDirection: 'column', textAlign: 'center' }}>
-                {/* Cabecera Tarjeta: Hora e Indicador de Fecha Centrados */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
-                    <Clock size={14} />
-                    <span>{t.horaInicio ? `${t.horaInicio} hs` : 'Sin hora'}</span>
+              <div key={t.id} className="glass-panel turno-card">
+                <div className="turno-top">
+                  <div className="time-block">
+                    <strong>{t.horaInicio || '--:--'}</strong>
+                    <small>hs</small>
                   </div>
 
-                  <span className={`badge ${badgeInfo.class}`}>
-                    {badgeInfo.text}
-                  </span>
-                </div>
-
-                {/* Info Cliente Centrada */}
-                <div style={{ marginBottom: '0.75rem', textAlign: 'center' }}>
-                  <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', marginBottom: '0.2rem', textAlign: 'center' }}>
-                    {t.clienteNombre}
-                  </h3>
-                  
-                  <div style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
-                    <Phone size={13} />
-                    <span>{t.clienteTelefono || 'Sin teléfono'}</span>
-                  </div>
-                </div>
-
-                {/* Detalle Servicio y Precio Centrados */}
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justify: 'center', 
-                  gap: '0.2rem',
-                  background: 'rgba(255, 255, 255, 0.03)', 
-                  padding: '0.55rem 0.75rem', 
-                  borderRadius: 'var(--radius-md)', 
-                  border: '1px solid var(--border-color)', 
-                  marginBottom: '0.85rem', 
-                  fontSize: '0.825rem',
-                  textAlign: 'center'
-                }}>
-                  <div><strong>Tarea:</strong> {t.servicio}</div>
-                  {totalPrecio > 0 && (
-                    <div style={{ color: 'var(--accent-emerald)', fontWeight: 800, fontSize: '0.95rem' }}>
-                      ${totalPrecio.toLocaleString('es-AR')}
+                  <div className="turno-info">
+                    <div className="turno-info-header">
+                      <h4 className="turno-name">{t.clienteNombre}</h4>
+                      <span className={`badge ${badgeInfo.class}`}>{badgeInfo.text}</span>
                     </div>
-                  )}
+                    <div className="turno-meta">
+                      <Phone size={15} aria-hidden="true" />
+                      <span>{t.clienteTelefono || 'Sin teléfono'}</span>
+                    </div>
+                    {!onlySelectedDate && (
+                      <div className="turno-meta">
+                        <CalendarIcon size={15} aria-hidden="true" />
+                        <span>{formatLongDate(t.fecha)}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Botones de Acción Secundarios Centrados */}
-                <div style={{ display: 'flex', gap: '0.45rem', justifyContent: 'center', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid var(--border-color)' }}>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => onOpenReschedule(t)}
-                    style={{ flex: 1, fontSize: '0.8rem', padding: '0.4rem', gap: '0.35rem', justifyContent: 'center' }}
-                    title="Reagendar turno"
-                  >
-                    <CalendarClock size={14} style={{ color: 'var(--accent-cyan)' }} />
+                {(t.servicio || totalPrecio > 0) && (
+                  <div className="turno-service">
+                    <div><span>Tarea:</span> {t.servicio || '—'}</div>
+                    {totalPrecio > 0 && (
+                      <div className="turno-price">${totalPrecio.toLocaleString('es-AR')}</div>
+                    )}
+                  </div>
+                )}
+
+                <div className="turno-actions">
+                  <button className="btn btn-secondary" onClick={() => onOpenReschedule(t)}>
+                    <CalendarClock size={17} style={{ color: 'var(--primary)' }} aria-hidden="true" />
                     <span>Reagendar</span>
                   </button>
 
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => onSelectTurno(t)}
-                    style={{ flex: 1, fontSize: '0.8rem', padding: '0.4rem', gap: '0.35rem', justifyContent: 'center' }}
-                    title="Editar Turno"
-                  >
-                    <Edit3 size={14} />
+                  <button className="btn btn-secondary" onClick={() => onSelectTurno(t)}>
+                    <Edit3 size={17} aria-hidden="true" />
                     <span>Editar</span>
                   </button>
 
-                  <button 
-                    className="btn btn-danger btn-icon" 
+                  <button
+                    className="btn btn-danger btn-icon"
                     onClick={() => onDeleteTurno(t.id)}
-                    title="Eliminar Turno"
-                    style={{ width: '36px', height: '36px' }}
+                    aria-label={`Eliminar turno de ${t.clienteNombre}`}
+                    title="Eliminar turno"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={17} aria-hidden="true" />
                   </button>
                 </div>
               </div>
