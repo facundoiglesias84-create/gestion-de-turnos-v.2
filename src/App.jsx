@@ -10,7 +10,7 @@ import { RescheduleModal } from './components/RescheduleModal';
 import { ReminderModal } from './components/ReminderModal';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 
-import { getStoredTurnos, saveTurnos } from './services/storageService';
+import { getStoredTurnos, saveTurnos, DEMO_TURNO_IDS } from './services/storageService';
 import { fetchTurnosFromXata, syncTurnoToXata, deleteTurnoFromXata, checkXataStatus } from './services/xataService';
 import { todayAR } from './utils/dateAR';
 
@@ -51,7 +51,7 @@ export function App() {
           setTurnos(res.data);
           saveTurnos(res.data);
         } else {
-          const localTurnos = getStoredTurnos();
+          const localTurnos = getStoredTurnos().filter(t => !DEMO_TURNO_IDS.includes(t.id));
           setTurnos(localTurnos);
           localTurnos.forEach(t => syncTurnoToXata(t));
         }

@@ -1,8 +1,9 @@
-const CACHE_NAME = 'turnos-v6';
+const CACHE_NAME = 'turnos-v7';
 const urlsToCache = [
   '/manifest.json',
   '/icon.svg',
-  '/logo.jpg',
+  '/icon-192.png',
+  '/icon-512.png',
   '/badge.svg'
 ];
 

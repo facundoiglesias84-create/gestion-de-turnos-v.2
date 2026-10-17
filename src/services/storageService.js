@@ -11,6 +11,9 @@ export const DEFAULT_TAREAS_PREDEFINIDAS = [
   { id: 'tp-3', descripcion: 'Inspección de frenos y amortiguadores', precio: 8000 }
 ];
 
+// Turno de ejemplo que se muestra sin base de datos; nunca se sube a la base
+export const DEMO_TURNO_IDS = ['t-101'];
+
 const INITIAL_TURNOS = [
   {
     id: 't-101',

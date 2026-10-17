@@ -66,12 +66,12 @@ export const XataConfigModal = ({ isOpen, onClose, xataConnected }) => {
             )}
             <div>
               <h4 style={{ color: statusInfo.connected ? 'var(--success-text)' : 'var(--warning-text)', fontSize: '1rem', marginBottom: '0.15rem' }}>
-                {statusInfo.connected ? 'Conectado a Xata.io (PostgreSQL)' : 'Modo Almacenamiento Local'}
+                {statusInfo.connected ? 'Conectado a Neon (PostgreSQL)' : 'Modo Almacenamiento Local'}
               </h4>
               <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
                 {statusInfo.connected 
-                  ? 'La aplicación se encuentra conectada a tu base de datos Xata en us-east-1.'
-                  : 'No se pudo conectar a Xata.io. Los datos se están guardando localmente.'}
+                  ? 'La aplicación se encuentra conectada a tu base de datos Neon.'
+                  : 'No se pudo conectar a la base de datos. Los datos se están guardando localmente.'}
               </p>
             </div>
           </div>
@@ -82,10 +82,10 @@ export const XataConfigModal = ({ isOpen, onClose, xataConnected }) => {
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
-              <div><strong>Host Xata:</strong> <code>lotafuq8s17fjckvferrcqtmk8.us-east-1.xata.tech</code></div>
-              <div><strong>Base de Datos:</strong> <code>xata</code></div>
+              <div><strong>Proveedor:</strong> Neon (PostgreSQL)</div>
+              <div><strong>Base de Datos:</strong> <code>neondb</code></div>
               <div><strong>Tabla Principal:</strong> <code>turnos</code> (id, cliente_nombre, fecha, hora, servicio, tareas_json)</div>
-              <div><strong>Registros en Xata:</strong> {statusInfo.count !== undefined ? statusInfo.count : 'Verificando...'}</div>
+              <div><strong>Registros:</strong> {statusInfo.count !== undefined ? statusInfo.count : 'Verificando...'}</div>
             </div>
           </div>
 
