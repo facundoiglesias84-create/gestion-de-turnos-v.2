@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Search, Calendar as CalendarIcon, Phone, Trash2, Edit3, CalendarClock, Plus, CheckCircle2, ListChecks, SlidersHorizontal } from 'lucide-react';
+import { Search, Calendar as CalendarIcon, CalendarClock, Plus, CheckCircle2, ListChecks, SlidersHorizontal, ChevronRight } from 'lucide-react';
 import { IconField } from './IconField';
 import { todayAR, addDays, weekdayOf } from '../utils/dateAR';
 
@@ -11,9 +11,7 @@ export const TurnosListView = ({
   selectedDate,
   onSelectDate,
   onSelectTurno,
-  onDeleteTurno,
-  onOpenNewTurno,
-  onOpenReschedule
+  onOpenNewTurno
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState('proximos'); // 'proximos', 'pasados', 'todos'
@@ -83,15 +81,26 @@ export const TurnosListView = ({
     return true;
   });
 
-  const getTurnoBadge = (fechaStr) => {
-    if (fechaStr < todayStr) {
-      return { text: 'Realizado', class: 'badge-completado' };
-    } else if (fechaStr === todayStr) {
-      return { text: 'Hoy', class: 'badge-confirmado' };
-    } else {
-      return { text: 'Próximo', class: 'badge-pendiente' };
-    }
-  };
+  const getPrecio = (t) => (t.tareas || []).reduce((acc, tk) => acc + (tk.precio || 0), 0);
+  const formatPrecio = (n) => `$${n.toLocaleString('es-AR')}`;
+
+  // Agrupar por día: los próximos del más cercano al más lejano, los pasados del más reciente al más viejo
+  const groups = Object.values(
+    filteredTurnos.reduce((acc, t) => {
+      (acc[t.fecha] ||= { fecha: t.fecha, turnos: [] }).turnos.push(t);
+      return acc;
+    }, {})
+  )
+    .map((g) => ({
+      ...g,
+      isPast: g.fecha < todayStr,
+      total: g.turnos.reduce((acc, t) => acc + getPrecio(t), 0),
+      turnos: [...g.turnos].sort((a, b) => (a.horaInicio || '').localeCompare(b.horaInicio || ''))
+    }))
+    .sort((a, b) => {
+      if (a.isPast !== b.isPast) return a.isPast ? 1 : -1;
+      return a.isPast ? b.fecha.localeCompare(a.fecha) : a.fecha.localeCompare(b.fecha);
+    });
 
   const hasActiveFilters = !onlySelectedDate || selectedDate !== todayStr || searchQuery.trim() !== '';
 
@@ -228,71 +237,43 @@ export const TurnosListView = ({
           </button>
         </div>
       ) : (
-        <div className="turnos-grid">
-          {filteredTurnos.map((t) => {
-            const totalPrecio = t.tareas && t.tareas.length > 0
-              ? t.tareas.reduce((acc, tk) => acc + (tk.precio || 0), 0)
-              : 0;
-            const badgeInfo = getTurnoBadge(t.fecha);
+        <div className="day-groups">
+          {groups.map((g) => (
+            <section key={g.fecha} className={`day-group ${g.isPast ? 'is-past' : ''}`}>
+              <header className="day-group-header">
+                <h4>
+                  {getDateLabel(g.fecha)}
+                  {g.isPast && <span className="day-done">Realizado</span>}
+                </h4>
+                <span className="day-group-meta">
+                  {g.turnos.length} {g.turnos.length === 1 ? 'turno' : 'turnos'}
+                  {g.total > 0 && <> · <strong>{formatPrecio(g.total)}</strong></>}
+                </span>
+              </header>
 
-            return (
-              <div key={t.id} className="glass-panel turno-card">
-                <div className="turno-top">
-                  <div className="time-block">
-                    <strong>{t.horaInicio || '--:--'}</strong>
-                    <small>hs</small>
-                  </div>
-
-                  <div className="turno-info">
-                    <div className="turno-info-header">
-                      <h4 className="turno-name">{t.clienteNombre}</h4>
-                      <span className={`badge ${badgeInfo.class}`}>{badgeInfo.text}</span>
-                    </div>
-                    <div className="turno-meta">
-                      <Phone size={15} aria-hidden="true" />
-                      <span>{t.clienteTelefono || 'Sin teléfono'}</span>
-                    </div>
-                    {!onlySelectedDate && (
-                      <div className="turno-meta">
-                        <CalendarIcon size={15} aria-hidden="true" />
-                        <span>{formatLongDate(t.fecha)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {(t.servicio || totalPrecio > 0) && (
-                  <div className="turno-service">
-                    <div><span>Tarea:</span> {t.servicio || '—'}</div>
-                    {totalPrecio > 0 && (
-                      <div className="turno-price">${totalPrecio.toLocaleString('es-AR')}</div>
-                    )}
-                  </div>
-                )}
-
-                <div className="turno-actions">
-                  <button className="btn btn-secondary" onClick={() => onOpenReschedule(t)}>
-                    <CalendarClock size={17} style={{ color: 'var(--primary)' }} aria-hidden="true" />
-                    <span>Reagendar</span>
-                  </button>
-
-                  <button className="btn btn-secondary" onClick={() => onSelectTurno(t)}>
-                    <Edit3 size={17} aria-hidden="true" />
-                    <span>Editar</span>
-                  </button>
-
-                  <button
-                    className="btn btn-danger btn-icon"
-                    onClick={() => onDeleteTurno(t.id)}
-                    aria-label={`Eliminar turno de ${t.clienteNombre}`}
-                    title="Eliminar turno"
-                  >
-                    <Trash2 size={17} aria-hidden="true" />
-                  </button>
-                </div>
+              <div className="glass-panel day-list">
+                {g.turnos.map((t) => {
+                  const precio = getPrecio(t);
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className="turno-row"
+                      onClick={() => onSelectTurno(t)}
+                    >
+                      <span className="turno-row-time">{t.horaInicio || '--:--'}</span>
+                      <span className="turno-row-info">
+                        <span className="turno-row-name">{t.clienteNombre}</span>
+                        {t.servicio && <span className="turno-row-service">{t.servicio}</span>}
+                      </span>
+                      {precio > 0 && <span className="turno-row-price">{formatPrecio(precio)}</span>}
+                      <ChevronRight size={20} className="turno-row-chevron" aria-hidden="true" />
+                    </button>
+                  );
+                })}
               </div>
-            );
-          })}
+            </section>
+          ))}
         </div>
       )}
     </div>

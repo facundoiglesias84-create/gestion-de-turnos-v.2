@@ -162,10 +162,7 @@ export function App() {
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
           onSelectTurno={handleSelectTurno}
-          onDeleteTurno={handleRequestDelete}
           onOpenNewTurno={handleOpenNewTurno}
-          onOpenReminder={handleOpenReminder}
-          onOpenReschedule={handleOpenReschedule}
         />
       </main>
 
@@ -185,6 +182,7 @@ export function App() {
         onUpdateTurno={handleUpdateTurno}
         onOpenReminder={handleOpenReminder}
         onOpenReschedule={handleOpenReschedule}
+        onDeleteTurno={handleRequestDelete}
       />
 
       <XataConfigModal 
